@@ -6,13 +6,13 @@ import type { ReactNode } from "react";
 import { ProtectedPage } from "@/components/auth/protected-page";
 
 const adminLinks = [
-  { href: "/admin/dashboard", label: "Dashboard" },
-  { href: "/admin/creators", label: "Creator" },
-  { href: "/admin/companies", label: "Unternehmen" },
-  { href: "/admin/campaigns", label: "Kampagnen" },
-  { href: "/admin/deals", label: "Deals" },
-  { href: "/admin/disputes", label: "Streitfaelle" },
-  { href: "/admin/settings", label: "Settings" },
+  { href: "/admin/dashboard", label: "Dashboard", short: "Home" },
+  { href: "/admin/creators", label: "Creator verwalten", short: "Creator" },
+  { href: "/admin/companies", label: "Unternehmen verwalten", short: "Companies" },
+  { href: "/admin/campaigns", label: "Kampagnen pruefen", short: "Campaigns" },
+  { href: "/admin/deals", label: "Deals & Angebote", short: "Deals" },
+  { href: "/admin/disputes", label: "Streitfaelle", short: "Disputes" },
+  { href: "/admin/settings", label: "Settings", short: "Settings" },
 ];
 
 export function AdminShell({
@@ -29,38 +29,41 @@ export function AdminShell({
   return (
     <ProtectedPage role="admin">
       <main className="premium-shell min-h-screen">
-        <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-5 sm:px-6 lg:px-8">
-          <aside className="sticky top-5 hidden h-[calc(100vh-2.5rem)] w-64 shrink-0 rounded-lg border border-zinc-200 bg-white/82 p-4 shadow-sm backdrop-blur-xl lg:block">
-            <Link className="block rounded-lg px-3 py-3" href="/admin/dashboard">
-              <p className="text-sm font-bold text-zinc-950">CreatorFlow</p>
-              <p className="mt-1 text-xs font-medium text-zinc-500">
-                Admin Control Center
-              </p>
-            </Link>
+        <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+          <header className="sticky top-3 z-20 rounded-lg border border-zinc-200 bg-white/88 px-3 py-3 shadow-sm backdrop-blur-xl">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <Link className="rounded-lg px-2 py-1" href="/admin/dashboard">
+                <p className="text-sm font-bold text-zinc-950">CreatorFlow Admin</p>
+                <p className="mt-0.5 text-xs font-medium text-zinc-500">
+                  Control Center
+                </p>
+              </Link>
 
-            <nav className="mt-6 grid gap-1">
-              {adminLinks.map((link) => {
-                const active = pathname === link.href;
+              <nav className="grid gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-end">
+                {adminLinks.map((link) => {
+                  const active = pathname === link.href;
 
-                return (
-                  <Link
-                    className={`rounded-lg px-3 py-2.5 text-sm font-semibold ${
-                      active
-                        ? "bg-zinc-950 text-white shadow-sm"
-                        : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950"
-                    }`}
-                    href={link.href}
-                    key={link.href}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </nav>
-          </aside>
+                  return (
+                    <Link
+                      className={`rounded-lg px-3 py-2 text-center text-sm font-semibold ${
+                        active
+                          ? "bg-zinc-950 text-white shadow-sm"
+                          : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-950"
+                      }`}
+                      href={link.href}
+                      key={link.href}
+                    >
+                      <span className="hidden xl:inline">{link.label}</span>
+                      <span className="xl:hidden">{link.short}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+          </header>
 
-          <section className="min-w-0 flex-1">
-            <header className="premium-panel rounded-lg px-5 py-5 sm:px-6">
+          <section className="mt-6 min-w-0">
+            <div className="premium-panel rounded-lg px-5 py-5 sm:px-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="premium-kicker">Admin</p>
@@ -78,27 +81,7 @@ export function AdminShell({
                   Zur Website
                 </Link>
               </div>
-
-              <nav className="mt-5 flex gap-2 overflow-x-auto pb-1 lg:hidden">
-                {adminLinks.map((link) => {
-                  const active = pathname === link.href;
-
-                  return (
-                    <Link
-                      className={`shrink-0 rounded-lg px-3 py-2 text-sm font-semibold ${
-                        active
-                          ? "bg-zinc-950 text-white"
-                          : "border border-zinc-200 bg-white text-zinc-600"
-                      }`}
-                      href={link.href}
-                      key={link.href}
-                    >
-                      {link.label}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </header>
+            </div>
 
             <div className="mt-6 grid gap-6">{children}</div>
           </section>

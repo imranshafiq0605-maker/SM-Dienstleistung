@@ -21,6 +21,51 @@ import type {
   Dispute,
 } from "@/types/creatorflow";
 
+const adminAreas = [
+  {
+    countKey: "pendingUsers",
+    description: "Creator freigeben, sperren und Profile kontrollieren.",
+    href: "/admin/creators",
+    label: "Creator Management",
+    metric: "Pending Creator pruefen",
+  },
+  {
+    countKey: "pendingUsers",
+    description: "Unternehmen verifizieren, sperren und Daten pruefen.",
+    href: "/admin/companies",
+    label: "Unternehmen Management",
+    metric: "Company Zugriffe steuern",
+  },
+  {
+    countKey: "activeCampaigns",
+    description: "Kampagnen ansehen, freigeben oder schliessen.",
+    href: "/admin/campaigns",
+    label: "Kampagnen Pruefung",
+    metric: "Aktive Kampagnen",
+  },
+  {
+    countKey: "openDeals",
+    description: "Deals, Angebote, Zahlstatus und Content-Workflow ueberwachen.",
+    href: "/admin/deals",
+    label: "Deals & Angebote",
+    metric: "Offene Deals",
+  },
+  {
+    countKey: "openDisputes",
+    description: "Streitfaelle und eskalierte Kooperationen ansehen.",
+    href: "/admin/disputes",
+    label: "Streitfall Center",
+    metric: "Offene Faelle",
+  },
+  {
+    countKey: "settings",
+    description: "Blacklist, Kategorien und interne Notizen verwalten.",
+    href: "/admin/settings",
+    label: "Admin Einstellungen",
+    metric: "Plattform Regeln",
+  },
+] as const;
+
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("de-DE", {
     currency: "EUR",
@@ -126,6 +171,7 @@ export default function AdminDashboardPage() {
       openDeals,
       openDisputes,
       pendingUsers,
+      settings: "Setup",
     };
   }, [campaigns, deals, disputes, users]);
 
@@ -201,6 +247,34 @@ export default function AdminDashboardPage() {
         />
       </section>
 
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {adminAreas.map((area) => (
+          <Link
+            className="group premium-panel rounded-lg p-5 hover:border-zinc-300 hover:bg-white"
+            href={area.href}
+            key={area.href}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-zinc-500">{area.metric}</p>
+                <h2 className="mt-3 text-xl font-semibold tracking-tight text-zinc-950">
+                  {area.label}
+                </h2>
+              </div>
+              <span className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-sm font-bold text-zinc-700 shadow-sm">
+                {metrics[area.countKey]}
+              </span>
+            </div>
+            <p className="mt-4 min-h-12 text-sm leading-6 text-zinc-500">
+              {area.description}
+            </p>
+            <div className="mt-5 inline-flex rounded-lg bg-zinc-950 px-4 py-2 text-sm font-semibold text-white shadow-sm group-hover:bg-zinc-800">
+              Bereich oeffnen
+            </div>
+          </Link>
+        ))}
+      </section>
+
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <AdminSection
           action={
@@ -247,20 +321,27 @@ export default function AdminDashboardPage() {
         <AdminSection eyebrow="Live Operation" title="Managementbereiche">
           <div className="grid gap-3">
             {[
-              ["Creator verwalten", "/admin/creators"],
-              ["Unternehmen verwalten", "/admin/companies"],
-              ["Kampagnen pruefen", "/admin/campaigns"],
-              ["Deals & Angebote", "/admin/deals"],
-              ["Streitfaelle", "/admin/disputes"],
-              ["Blacklist & Kategorien", "/admin/settings"],
-            ].map(([label, href]) => (
+              ["Creator verwalten", "/admin/creators", "Freigeben, sperren, Profile pruefen"],
+              ["Unternehmen verwalten", "/admin/companies", "Verifizieren, sperren, Stammdaten sehen"],
+              ["Kampagnen pruefen", "/admin/campaigns", "Briefings und Kampagnenstatus kontrollieren"],
+              ["Deals & Angebote", "/admin/deals", "Kooperationen, Angebote und Zahlstatus sehen"],
+              ["Streitfaelle", "/admin/disputes", "Konflikte und Eskalationen beobachten"],
+              ["Blacklist & Kategorien", "/admin/settings", "Regeln, Notizen und Kategorien pflegen"],
+            ].map(([label, href, description]) => (
               <Link
-                className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white/76 px-4 py-3 text-sm font-semibold text-zinc-800 hover:border-zinc-300 hover:bg-white"
+                className="flex items-center justify-between gap-4 rounded-lg border border-zinc-200 bg-white/76 px-4 py-3 text-zinc-800 hover:border-zinc-300 hover:bg-white"
                 href={href}
                 key={href}
               >
-                {label}
-                <span className="text-zinc-400">/</span>
+                <span>
+                  <span className="block text-sm font-semibold">{label}</span>
+                  <span className="mt-1 block text-xs font-medium text-zinc-500">
+                    {description}
+                  </span>
+                </span>
+                <span className="shrink-0 rounded-full bg-zinc-950 px-3 py-1 text-xs font-bold text-white">
+                  Oeffnen
+                </span>
               </Link>
             ))}
           </div>
