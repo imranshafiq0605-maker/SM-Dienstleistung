@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
       await refreshUser();
       router.replace("/admin/dashboard");
     } catch {
-      setError("Admin Login fehlgeschlagen. Bitte pruefe deine Daten.");
+      setError("Admin Login fehlgeschlagen. Bitte prüfe deine Daten.");
     } finally {
       setSubmitting(false);
     }
@@ -57,10 +57,10 @@ export default function AdminLoginPage() {
           </h1>
           <p className="mt-4 text-sm leading-6 text-zinc-500">
             Dieser Bereich ist nicht im normalen Website-Login sichtbar und ist
-            nur fuer Plattform-Administratoren gedacht.
+            nur für Plattform-Administratoren gedacht.
           </p>
           <div className="mt-8 grid gap-3">
-            {["Nutzer freigeben", "Kampagnen pruefen", "Deals ueberwachen"].map(
+            {["Nutzer freigeben", "Kampagnen prüfen", "Deals überwachen"].map(
               (item) => (
                 <div
                   className="rounded-lg border border-zinc-200 bg-white/70 px-4 py-3 text-sm font-semibold text-zinc-700"

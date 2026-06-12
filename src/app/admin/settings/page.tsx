@@ -138,7 +138,7 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminShell
-      subtitle="Verwalte Blacklist, Kategorien und interne Notizen fuer operative Entscheidungen."
+      subtitle="Verwalte Blacklist, Kategorien und interne Notizen für operative Entscheidungen."
       title="Admin Settings"
     >
       <section className="grid gap-4 md:grid-cols-3">
@@ -300,7 +300,7 @@ export default function AdminSettingsPage() {
         <div className="mt-5 grid gap-3">
           {notes.length === 0 ? (
             <EmptyState
-              text="Interne Hinweise fuer Nutzer, Kampagnen oder Deals werden hier gesammelt."
+              text="Interne Hinweise für Nutzer, Kampagnen oder Deals werden hier gesammelt."
               title="Noch keine Notizen"
             />
           ) : (

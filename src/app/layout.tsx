@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "CreatorFlow",
-  description: "Marktplatz fuer Creator-Kooperationen",
+  description: "Marktplatz für Creator-Kooperationen",
 };
 
 export default function RootLayout({

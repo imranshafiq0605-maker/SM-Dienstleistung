@@ -9,7 +9,7 @@ const adminLinks = [
   { href: "/admin/dashboard", label: "Dashboard", short: "Home" },
   { href: "/admin/creators", label: "Creator verwalten", short: "Creator" },
   { href: "/admin/companies", label: "Unternehmen verwalten", short: "Companies" },
-  { href: "/admin/campaigns", label: "Kampagnen pruefen", short: "Campaigns" },
+  { href: "/admin/campaigns", label: "Kampagnen prüfen", short: "Campaigns" },
   { href: "/admin/deals", label: "Deals & Angebote", short: "Deals" },
   { href: "/admin/disputes", label: "Streitfaelle", short: "Disputes" },
   { href: "/admin/settings", label: "Settings", short: "Settings" },
@@ -52,7 +52,7 @@ export function AdminShell({
 
               <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-2">
                 <p className="px-2 pb-2 text-xs font-bold uppercase tracking-wide text-zinc-500">
-                  Admin Menue
+                  Admin Menü
                 </p>
                 <nav className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
                   {adminLinks.map((link) => {

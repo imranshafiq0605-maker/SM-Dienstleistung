@@ -66,7 +66,7 @@ export default function AdminCompaniesPage() {
           value={companies.length}
         />
         <AdminStatCard
-          detail="Warten auf Pruefung"
+          detail="Warten auf Prüfung"
           label="Pending"
           value={companies.filter((company) => company.status === "pending").length}
         />
@@ -85,7 +85,7 @@ export default function AdminCompaniesPage() {
       <AdminSection eyebrow="Companies" title="Alle Unternehmensprofile">
         {companies.length === 0 ? (
           <EmptyState
-            text="Registrierte Unternehmen erscheinen hier zur Pruefung und Verwaltung."
+            text="Registrierte Unternehmen erscheinen hier zur Prüfung und Verwaltung."
             title="Noch keine Unternehmen vorhanden"
           />
         ) : (

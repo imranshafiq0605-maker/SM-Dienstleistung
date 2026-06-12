@@ -40,12 +40,12 @@ export function ProtectedPage({
         <section className="premium-panel w-full max-w-lg rounded-lg p-6 text-center sm:p-8">
           <p className="premium-kicker">Kein Zugriff</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-950">
-            Dieser Bereich ist nur fuer {role}.
+            Dieser Bereich ist nur für {role}.
           </h1>
           <p className="mt-3 text-sm leading-6 text-zinc-500">
             Dein aktueller Account hat die Rolle{" "}
             <span className="font-semibold text-zinc-950">{appUser.role}</span>.
-            Fuer diesen Bereich muss in Firestore unter users/{appUser.uid} die
+            Für diesen Bereich muss in Firestore unter users/{appUser.uid} die
             Rolle {role} gespeichert sein.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">

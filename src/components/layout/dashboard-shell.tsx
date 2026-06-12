@@ -10,6 +10,20 @@ const roleLabels = {
   company: "Unternehmen",
 };
 
+const shortLabels: Record<string, string> = {
+  "Anfrage senden": "Anfrage",
+  Bewerbungen: "Bewerb.",
+  "Creator suchen": "Creator",
+  Dashboard: "Home",
+  Deals: "Deals",
+  "Kampagne erstellen": "Kampagne",
+  Kampagnen: "Kampagn.",
+  "Media Kit": "Kit",
+  Profil: "Profil",
+  Socials: "Socials",
+  "Unternehmen suchen": "Firmen",
+};
+
 const statusStyles = {
   active: "border-emerald-200 bg-emerald-50 text-emerald-800",
   pending: "border-amber-200 bg-amber-50 text-amber-800",
@@ -35,11 +49,34 @@ export function DashboardShell({
   title: string;
 }) {
   const { appUser, signOut } = useAuth();
+  const navItems =
+    appUser?.role === "creator"
+      ? [
+          ["/creator/dashboard", "Dashboard"],
+          ["/creator/profile", "Profil"],
+          ["/creator/socials", "Socials"],
+          ["/creator/media-kit", "Media Kit"],
+          ["/creator/company-search", "Unternehmen suchen"],
+          ["/creator/campaigns", "Kampagnen"],
+          ["/creator/offers/new", "Anfrage senden"],
+          ["/creator/deals", "Deals"],
+        ]
+      : appUser?.role === "company"
+        ? [
+            ["/company/dashboard", "Dashboard"],
+            ["/company/profile", "Profil"],
+            ["/company/creator-search", "Creator suchen"],
+            ["/company/campaigns/new", "Kampagne erstellen"],
+            ["/company/applications", "Bewerbungen"],
+            ["/company/offers/new", "Angebot senden"],
+            ["/company/deals", "Deals"],
+          ]
+        : [];
 
   return (
-    <main className="premium-shell text-zinc-950">
+    <main className="premium-shell pb-28 text-zinc-950 md:pb-0">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
-        <header className="premium-panel rounded-lg p-5 sm:p-6">
+        <header className="liquid-glass rounded-lg p-5 sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <Link className="inline-flex items-center gap-3" href="/">
@@ -72,7 +109,7 @@ export function DashboardShell({
               ) : null}
             </div>
             <button
-              className="premium-button-secondary rounded-lg px-4 py-2.5 text-sm font-semibold"
+              className="hidden rounded-lg border border-zinc-200 bg-white/75 px-4 py-2.5 text-sm font-semibold shadow-sm backdrop-blur md:inline-flex"
               onClick={signOut}
               type="button"
             >
@@ -81,33 +118,33 @@ export function DashboardShell({
           </div>
         </header>
 
-        {appUser?.role === "creator" ? (
-          <nav className="flex flex-wrap gap-2 rounded-lg border border-zinc-200 bg-white/55 p-2 shadow-[0_1px_2px_rgb(20_20_17/0.04)] backdrop-blur">
-            <NavLink href="/creator/dashboard" label="Dashboard" />
-            <NavLink href="/creator/profile" label="Profil" />
-            <NavLink href="/creator/socials" label="Socials" />
-            <NavLink href="/creator/media-kit" label="Media Kit" />
-            <NavLink href="/creator/company-search" label="Unternehmen suchen" />
-            <NavLink href="/creator/campaigns" label="Kampagnen" />
-            <NavLink href="/creator/offers/new" label="Anfrage senden" />
-            <NavLink href="/creator/deals" label="Deals" />
-          </nav>
-        ) : null}
-
-        {appUser?.role === "company" ? (
-          <nav className="flex flex-wrap gap-2 rounded-lg border border-zinc-200 bg-white/55 p-2 shadow-[0_1px_2px_rgb(20_20_17/0.04)] backdrop-blur">
-            <NavLink href="/company/dashboard" label="Dashboard" />
-            <NavLink href="/company/profile" label="Profil" />
-            <NavLink href="/company/creator-search" label="Creator suchen" />
-            <NavLink href="/company/campaigns/new" label="Kampagne erstellen" />
-            <NavLink href="/company/applications" label="Bewerbungen" />
-            <NavLink href="/company/offers/new" label="Angebot senden" />
-            <NavLink href="/company/deals" label="Deals" />
+        {navItems.length ? (
+          <nav className="hidden rounded-lg border border-zinc-200 bg-white/55 p-2 shadow-[0_1px_2px_rgb(20_20_17/0.04)] backdrop-blur md:flex md:flex-wrap md:gap-2">
+            <span className="rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-black text-white">
+              Menü
+            </span>
+            {navItems.map(([href, label]) => (
+              <NavLink href={href} key={href} label={label} />
+            ))}
           </nav>
         ) : null}
 
         <div className="contents">{children}</div>
       </div>
+
+      {navItems.length ? (
+        <nav className="liquid-glass fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 gap-1 rounded-lg p-2 md:hidden">
+          {navItems.slice(0, 5).map(([href, label]) => (
+            <Link
+              className="rounded-lg px-2 py-3 text-center text-[11px] font-black text-zinc-800"
+              href={href}
+              key={href}
+            >
+              {shortLabels[label] || label}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
     </main>
   );
 }

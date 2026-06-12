@@ -38,7 +38,7 @@ export default function AdminSetupPage() {
       })
       .catch(() => {
         if (!mounted) return;
-        setError("Admin-Pruefung fehlgeschlagen. Pruefe deine Firestore Rules.");
+        setError("Admin-Prüfung fehlgeschlagen. Prüfe deine Firestore Rules.");
         setChecking(false);
       });
 
@@ -81,7 +81,7 @@ export default function AdminSetupPage() {
       router.replace("/admin/dashboard");
     } catch {
       setError(
-        "Admin konnte nicht erstellt werden. Pruefe E-Mail, Passwort und Firebase Rules.",
+        "Admin konnte nicht erstellt werden. Prüfe E-Mail, Passwort und Firebase Rules.",
       );
       setSubmitting(false);
     }
@@ -101,7 +101,7 @@ export default function AdminSetupPage() {
 
         {checking ? (
           <div className="mt-6 rounded-lg border border-zinc-200 bg-white/70 p-4 text-sm font-medium text-zinc-500">
-            Pruefe Admin-Status...
+            Prüfe Admin-Status...
           </div>
         ) : null}
 

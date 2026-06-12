@@ -1,6 +1,7 @@
 "use client";
 
 import { collection, doc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import {
@@ -56,7 +57,7 @@ export default function AdminCreatorsPage() {
 
   return (
     <AdminShell
-      subtitle="Pruefe Creatorprofile, schalte passende Profile frei und sperre auffaellige Accounts."
+      subtitle="Prüfe Creatorprofile, schalte passende Profile frei und sperre auffällige Accounts."
       title="Creator verwalten"
     >
       <section className="grid gap-4 md:grid-cols-4">
@@ -116,6 +117,12 @@ export default function AdminCreatorsPage() {
                 </div>
                 <StatusBadge status={creator.status} />
                 <div className="flex flex-wrap gap-2">
+                  <Link
+                    className="premium-button-secondary rounded-lg px-3 py-2 text-sm font-semibold"
+                    href={`/admin/creators/${creator.uid}`}
+                  >
+                    Öffnen
+                  </Link>
                   <button
                     className="premium-button rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50"
                     disabled={updatingUid === creator.uid}

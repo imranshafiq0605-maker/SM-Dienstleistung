@@ -27,11 +27,11 @@ const adminAreas = [
     description: "Creator freigeben, sperren und Profile kontrollieren.",
     href: "/admin/creators",
     label: "Creator Management",
-    metric: "Pending Creator pruefen",
+    metric: "Pending Creator prüfen",
   },
   {
     countKey: "pendingUsers",
-    description: "Unternehmen verifizieren, sperren und Daten pruefen.",
+    description: "Unternehmen verifizieren, sperren und Daten prüfen.",
     href: "/admin/companies",
     label: "Unternehmen Management",
     metric: "Company Zugriffe steuern",
@@ -40,7 +40,7 @@ const adminAreas = [
     countKey: "activeCampaigns",
     description: "Kampagnen ansehen, freigeben oder schliessen.",
     href: "/admin/campaigns",
-    label: "Kampagnen Pruefung",
+    label: "Kampagnen Prüfung",
     metric: "Aktive Kampagnen",
   },
   {
@@ -218,7 +218,7 @@ export default function AdminDashboardPage() {
           value={companies.length}
         />
         <AdminStatCard
-          detail="Bei 15% Plattformfee geschaetzt"
+          detail="Bei 15% Plattformfee geschätzt"
           label="Plattformumsatz"
           value={formatCurrency(metrics.estimatedRevenue)}
         />
@@ -269,7 +269,7 @@ export default function AdminDashboardPage() {
               {area.description}
             </p>
             <div className="mt-5 inline-flex rounded-lg bg-zinc-950 px-4 py-2 text-sm font-semibold text-white shadow-sm group-hover:bg-zinc-800">
-              Bereich oeffnen
+              Bereich öffnen
             </div>
           </Link>
         ))}
@@ -282,7 +282,7 @@ export default function AdminDashboardPage() {
               className="premium-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
               href="/admin/creators"
             >
-              Alle pruefen
+              Alle prüfen
             </Link>
           }
           eyebrow="Freigaben"
@@ -310,7 +310,7 @@ export default function AdminDashboardPage() {
                     className="premium-button w-fit rounded-lg px-3 py-2 text-sm font-semibold"
                     href={profile.href}
                   >
-                    Oeffnen
+                    Öffnen
                   </Link>
                 </div>
               ))}
@@ -321,9 +321,9 @@ export default function AdminDashboardPage() {
         <AdminSection eyebrow="Live Operation" title="Managementbereiche">
           <div className="grid gap-3">
             {[
-              ["Creator verwalten", "/admin/creators", "Freigeben, sperren, Profile pruefen"],
+              ["Creator verwalten", "/admin/creators", "Freigeben, sperren, Profile prüfen"],
               ["Unternehmen verwalten", "/admin/companies", "Verifizieren, sperren, Stammdaten sehen"],
-              ["Kampagnen pruefen", "/admin/campaigns", "Briefings und Kampagnenstatus kontrollieren"],
+              ["Kampagnen prüfen", "/admin/campaigns", "Briefings und Kampagnenstatus kontrollieren"],
               ["Deals & Angebote", "/admin/deals", "Kooperationen, Angebote und Zahlstatus sehen"],
               ["Streitfaelle", "/admin/disputes", "Konflikte und Eskalationen beobachten"],
               ["Blacklist & Kategorien", "/admin/settings", "Regeln, Notizen und Kategorien pflegen"],
@@ -340,7 +340,7 @@ export default function AdminDashboardPage() {
                   </span>
                 </span>
                 <span className="shrink-0 rounded-full bg-zinc-950 px-3 py-1 text-xs font-bold text-white">
-                  Oeffnen
+                  Öffnen
                 </span>
               </Link>
             ))}

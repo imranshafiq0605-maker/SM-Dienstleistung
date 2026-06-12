@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ProtectedPage } from "@/components/auth/protected-page";
@@ -27,45 +28,48 @@ export default function CompanyDashboardPage() {
   return (
     <ProtectedPage role="company">
       <DashboardShell title="Unternehmen Dashboard">
+        <section className="company-media slide-in-right min-h-[420px] rounded-lg p-5 text-white shadow-2xl shadow-zinc-950/15 sm:p-8">
+          <div className="flex h-full max-w-3xl flex-col justify-end">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-white/70">
+              Brand Control Room
+            </p>
+            <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">
+              {profile?.companyName || "Dein Unternehmen"} findet passende Creator.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base font-medium leading-8 text-white/82">
+              Suche Creator, starte Kampagnen, prüfe Bewerbungen und begleite
+              Content bis zur Veröffentlichung.
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Link className="rounded-lg bg-white px-5 py-3 text-center text-sm font-black text-zinc-950" href="/company/creator-search">
+                Creator suchen
+              </Link>
+              <Link className="liquid-glass rounded-lg px-5 py-3 text-center text-sm font-black text-zinc-950" href="/company/campaigns/new">
+                Kampagne erstellen
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {appUser ? (
           <StatusCard
-            activeText="Dein Unternehmensprofil ist aktiv. Kontakt- und Kampagnenfunktionen koennen in den naechsten MVPs freigeschaltet werden."
+            activeText="Dein Unternehmensprofil ist aktiv. Du kannst Creator kontaktieren und Kampagnen erstellen."
             status={appUser.status}
           />
         ) : null}
 
-        <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-              Unternehmen
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold">
-              {profile?.companyName || "Unternehmen"}
-            </h2>
-          </div>
-          <dl className="grid gap-4 text-sm sm:grid-cols-2">
-            <div>
-              <dt className="font-medium text-zinc-500">Ansprechpartner</dt>
-              <dd className="mt-1 text-zinc-900">
-                {profile?.contactPerson || "-"}
-              </dd>
-            </div>
-            <div>
-              <dt className="font-medium text-zinc-500">Branche</dt>
-              <dd className="mt-1 text-zinc-900">{profile?.industry || "-"}</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-zinc-500">Website</dt>
-              <dd className="mt-1 text-zinc-900">{profile?.website || "-"}</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-zinc-500">Ort</dt>
-              <dd className="mt-1 text-zinc-900">
-                {[profile?.city, profile?.country].filter(Boolean).join(", ") ||
-                  "-"}
-              </dd>
-            </div>
-          </dl>
+        <section className="grid gap-4 md:grid-cols-3">
+          {[
+            ["Profil", profile?.description ? "Bereit" : "Ausfüllen", "Beschreibung und Branche"],
+            ["Standort", [profile?.city, profile?.country].filter(Boolean).join(", ") || "-", "Region und Markt"],
+            ["Budget", profile?.budgetMax ? `${profile.budgetMax} €` : "Offen", "Kampagnenrahmen"],
+          ].map(([title, value, text]) => (
+            <article className="premium-card bounce-soft rounded-lg p-5" key={title}>
+              <p className="text-sm font-semibold text-zinc-500">{title}</p>
+              <p className="mt-4 text-3xl font-black text-zinc-950">{value}</p>
+              <p className="mt-2 text-sm text-zinc-500">{text}</p>
+            </article>
+          ))}
         </section>
       </DashboardShell>
     </ProtectedPage>

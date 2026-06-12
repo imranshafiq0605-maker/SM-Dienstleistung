@@ -48,7 +48,7 @@ export default function LoginPage() {
       await refreshUser();
       router.replace(dashboardPathForRole(userDoc.role));
     } catch {
-      setError("Login fehlgeschlagen. Bitte pruefe deine Daten.");
+      setError("Login fehlgeschlagen. Bitte prüfe deine Daten.");
     } finally {
       setSubmitting(false);
     }
@@ -68,10 +68,10 @@ export default function LoginPage() {
             <span className="font-semibold">CreatorFlow</span>
           </Link>
           <h1 className="mt-7 text-3xl font-semibold tracking-tight">
-            Willkommen zurueck
+            Willkommen zurück
           </h1>
           <p className="mt-2 text-sm leading-6 text-zinc-500">
-            Dieser Login ist fuer Creator und Unternehmen. Admins nutzen den
+            Dieser Login ist für Creator und Unternehmen. Admins nutzen den
             separaten Admin-Zugang.
           </p>
         </div>

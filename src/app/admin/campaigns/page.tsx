@@ -52,8 +52,8 @@ export default function AdminCampaignsPage() {
 
   return (
     <AdminShell
-      subtitle="Pruefe Briefings, Budgets, Produktangaben und Sichtbarkeit von Kampagnen."
-      title="Kampagnen pruefen"
+      subtitle="Prüfe Briefings, Budgets, Produktangaben und Sichtbarkeit von Kampagnen."
+      title="Kampagnen prüfen"
     >
       <section className="grid gap-4 md:grid-cols-4">
         <AdminStatCard
@@ -67,7 +67,7 @@ export default function AdminCampaignsPage() {
           value={campaigns.filter((campaign) => campaign.status === "draft").length}
         />
         <AdminStatCard
-          detail="Fuer Creator sichtbar"
+          detail="Für Creator sichtbar"
           label="Aktiv"
           value={campaigns.filter((campaign) => campaign.status === "active").length}
         />
@@ -81,7 +81,7 @@ export default function AdminCampaignsPage() {
       <AdminSection eyebrow="Campaigns" title="Kampagnenuebersicht">
         {campaigns.length === 0 ? (
           <EmptyState
-            text="Sobald Unternehmen Kampagnen erstellen, kannst du sie hier pruefen und freischalten."
+            text="Sobald Unternehmen Kampagnen erstellen, kannst du sie hier prüfen und freischalten."
             title="Noch keine Kampagnen vorhanden"
           />
         ) : (
