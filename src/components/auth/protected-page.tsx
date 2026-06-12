@@ -20,7 +20,7 @@ export function ProtectedPage({
     if (loading) return;
 
     if (!appUser) {
-      router.replace("/login");
+      router.replace(role === "admin" ? "/admin/login" : "/login");
       return;
     }
 
@@ -45,16 +45,18 @@ export function ProtectedPage({
           <p className="mt-3 text-sm leading-6 text-zinc-500">
             Dein aktueller Account hat die Rolle{" "}
             <span className="font-semibold text-zinc-950">{appUser.role}</span>.
-            Fuer das Admin Dashboard muss in Firestore unter users/{appUser.uid}
-            die Rolle admin gespeichert sein.
+            Fuer diesen Bereich muss in Firestore unter users/{appUser.uid} die
+            Rolle {role} gespeichert sein.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link
-              className="premium-button rounded-lg px-4 py-3 text-sm font-semibold"
-              href="/admin/setup"
-            >
-              First Admin erstellen
-            </Link>
+            {role === "admin" ? (
+              <Link
+                className="premium-button rounded-lg px-4 py-3 text-sm font-semibold"
+                href="/admin/login"
+              >
+                Zum Admin Login
+              </Link>
+            ) : null}
             <Link
               className="premium-button-secondary rounded-lg px-4 py-3 text-sm font-semibold"
               href="/login"

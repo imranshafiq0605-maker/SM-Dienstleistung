@@ -116,9 +116,9 @@ export default function AdminSetupPage() {
             </p>
             <Link
               className="premium-button mt-4 inline-flex rounded-lg px-4 py-3 text-sm font-semibold"
-              href="/login"
+              href="/admin/login"
             >
-              Zum Login
+              Zum Admin Login
             </Link>
           </div>
         ) : null}
