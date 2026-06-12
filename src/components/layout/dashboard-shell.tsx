@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ReactNode } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 
@@ -35,6 +36,59 @@ export function DashboardShell({
             Abmelden
           </button>
         </header>
+        {appUser?.role === "creator" ? (
+          <nav className="flex flex-wrap gap-2">
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/creator/dashboard">
+              Dashboard
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/creator/profile">
+              Profil
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/creator/socials">
+              Socials
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/creator/media-kit">
+              Media Kit
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/creator/company-search">
+              Unternehmen suchen
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/creator/campaigns">
+              Kampagnen
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/creator/offers/new">
+              Anfrage senden
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/creator/deals">
+              Deals
+            </Link>
+          </nav>
+        ) : null}
+        {appUser?.role === "company" ? (
+          <nav className="flex flex-wrap gap-2">
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/company/dashboard">
+              Dashboard
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/company/profile">
+              Profil
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/company/creator-search">
+              Creator suchen
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/company/campaigns/new">
+              Kampagne erstellen
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/company/applications">
+              Bewerbungen
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/company/offers/new">
+              Angebot senden
+            </Link>
+            <Link className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold" href="/company/deals">
+              Deals
+            </Link>
+          </nav>
+        ) : null}
         {children}
       </div>
     </main>

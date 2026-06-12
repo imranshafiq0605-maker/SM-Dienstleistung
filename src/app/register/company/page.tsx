@@ -78,10 +78,18 @@ export default function CompanyRegisterPage() {
         phone: form.phone,
         website: form.website,
         industry: form.industry,
+        address: "",
+        billingAddress: "",
+        vatId: "",
         city: form.city,
         country: form.country,
         description: form.description,
         logoUrl,
+        socialLinks: [],
+        activeCampaigns: 0,
+        budgetMin: 0,
+        budgetMax: 0,
+        verified: false,
       });
 
       router.replace("/company/dashboard");

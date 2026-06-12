@@ -8,19 +8,7 @@ import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { TextAreaField, TextField } from "@/components/ui/form-field";
 import { auth, db, storage } from "@/lib/firebase";
-
-const creatorCategories = [
-  "Beauty",
-  "Fashion",
-  "Fitness",
-  "Gaming",
-  "Lifestyle",
-  "Food",
-  "Travel",
-  "Business",
-  "Tech",
-  "UGC",
-];
+import { creatorCategories } from "@/lib/profile-options";
 
 export default function CreatorRegisterPage() {
   const router = useRouter();
@@ -99,11 +87,32 @@ export default function CreatorRegisterPage() {
         lastName: form.lastName,
         artistName: form.artistName,
         phone: form.phone,
+        address: "",
+        birthDate: "",
+        gender: "not_specified",
         city: form.city,
         country: form.country,
+        language: "",
+        bio: form.shortBio,
         shortBio: form.shortBio,
         categories,
+        audience: "",
+        availability: "",
+        minimumPrice: 0,
+        priceStory: 0,
+        priceReel: 0,
+        priceTikTok: 0,
+        priceYouTubeShort: 0,
+        priceYouTubeVideo: 0,
+        priceUgcVideo: 0,
+        rating: 0,
+        verified: false,
+        ugcAvailable: false,
         profileImageUrl,
+        mediaKit: [],
+        screenshots: [],
+        portfolio: [],
+        socialAccounts: [],
       });
 
       router.replace("/creator/dashboard");

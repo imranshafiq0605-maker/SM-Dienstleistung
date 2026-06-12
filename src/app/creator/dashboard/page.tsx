@@ -60,7 +60,7 @@ export default function CreatorDashboardPage() {
             <div className="sm:col-span-2">
               <dt className="font-medium text-zinc-500">Kategorien</dt>
               <dd className="mt-1 text-zinc-900">
-                {profile?.categories.length ? profile.categories.join(", ") : "-"}
+                {profile?.categories?.length ? profile.categories.join(", ") : "-"}
               </dd>
             </div>
           </dl>
