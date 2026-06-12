@@ -3,9 +3,9 @@
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState } from "react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { TextAreaField, TextField } from "@/components/ui/form-field";
 import { auth, db, storage } from "@/lib/firebase";
 import { creatorCategories } from "@/lib/profile-options";
@@ -130,12 +130,7 @@ export default function CreatorRegisterPage() {
         onSubmit={handleSubmit}
       >
         <div>
-          <Link className="inline-flex items-center gap-3" href="/">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-zinc-950 text-sm font-bold text-white">
-              CF
-            </span>
-            <span className="font-semibold">CreatorFlow</span>
-          </Link>
+          <BrandLogo />
           <h1 className="mt-7 text-3xl font-semibold tracking-tight">
             Creator Profil anlegen
           </h1>
@@ -147,7 +142,7 @@ export default function CreatorRegisterPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField label="Vorname" required value={form.firstName} onChange={(e) => updateField("firstName", e.target.value)} />
           <TextField label="Nachname" required value={form.lastName} onChange={(e) => updateField("lastName", e.target.value)} />
-          <TextField label="Kuenstlername" value={form.artistName} onChange={(e) => updateField("artistName", e.target.value)} />
+          <TextField label="Künstlername" value={form.artistName} onChange={(e) => updateField("artistName", e.target.value)} />
           <TextField label="Telefonnummer" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} />
           <TextField label="E-Mail" required type="email" value={form.email} onChange={(e) => updateField("email", e.target.value)} />
           <TextField label="Passwort" required minLength={6} type="password" value={form.password} onChange={(e) => updateField("password", e.target.value)} />

@@ -78,7 +78,7 @@ export default function AdminCampaignsPage() {
         />
       </section>
 
-      <AdminSection eyebrow="Campaigns" title="Kampagnenuebersicht">
+      <AdminSection eyebrow="Campaigns" title="Kampagnenübersicht">
         {campaigns.length === 0 ? (
           <EmptyState
             text="Sobald Unternehmen Kampagnen erstellen, kannst du sie hier prüfen und freischalten."

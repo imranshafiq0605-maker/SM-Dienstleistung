@@ -1,6 +1,6 @@
 "use client";
 
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -22,13 +22,9 @@ export function ChatList({ role }: { role: Extract<UserRole, "creator" | "compan
   useEffect(() => {
     if (!appUser) return;
 
-    getDocs(
-      query(
-        collection(db, "conversations"),
-        where("participants", "array-contains", appUser.uid),
-      ),
-    )
-      .then((snapshot) => {
+    const unsubscribe = onSnapshot(
+      query(collection(db, "conversations"), where("participants", "array-contains", appUser.uid)),
+      (snapshot) => {
         const loaded = snapshot.docs.map((item) => ({
           ...(item.data() as Conversation),
           id: item.id,
@@ -40,15 +36,18 @@ export function ChatList({ role }: { role: Extract<UserRole, "creator" | "compan
           }),
         );
         setLoading(false);
-      })
-      .catch((chatError) => {
+      },
+      (chatError) => {
         setError(
           chatError instanceof Error
             ? chatError.message
             : "Chats konnten nicht geladen werden.",
         );
         setLoading(false);
-      });
+      },
+    );
+
+    return unsubscribe;
   }, [appUser]);
 
   return (

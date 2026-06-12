@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { ReactNode, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { PillBottomNav, type PillNavItem } from "@/components/layout/pill-bottom-nav";
 import { db } from "@/lib/firebase";
 import type { Conversation } from "@/types/creatorflow";
@@ -58,19 +58,19 @@ export function DashboardShell({
   useEffect(() => {
     if (!appUser || (appUser.role !== "creator" && appUser.role !== "company")) return;
 
-    getDocs(
-      query(
-        collection(db, "conversations"),
-        where("participants", "array-contains", appUser.uid),
-      ),
-    ).then((snapshot) => {
+    const unsubscribe = onSnapshot(
+      query(collection(db, "conversations"), where("participants", "array-contains", appUser.uid)),
+      (snapshot) => {
       setUnreadChats(
         snapshot.docs.reduce((sum, item) => {
           const conversation = item.data() as Conversation;
           return sum + Number(conversation.unreadBy?.[appUser.uid] || 0);
         }, 0),
       );
-    });
+      },
+    );
+
+    return unsubscribe;
   }, [appUser]);
 
   return (
@@ -79,19 +79,7 @@ export function DashboardShell({
         <header className="liquid-glass rounded-lg p-5 sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <Link className="inline-flex items-center gap-3" href="/">
-                <span className="grid h-10 w-10 place-items-center rounded-lg bg-zinc-950 text-sm font-bold text-white shadow-lg shadow-zinc-950/15">
-                  CF
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold text-zinc-500">
-                    CreatorFlow
-                  </span>
-                  <span className="block text-xl font-semibold text-zinc-950">
-                    {title}
-                  </span>
-                </span>
-              </Link>
+              <BrandLogo label={title} />
               {appUser ? (
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   <span className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-600">

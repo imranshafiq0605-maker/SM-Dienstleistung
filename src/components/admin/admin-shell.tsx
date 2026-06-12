@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { ProtectedPage } from "@/components/auth/protected-page";
 import { PillBottomNav, type PillNavItem } from "@/components/layout/pill-bottom-nav";
 
@@ -34,14 +35,7 @@ export function AdminShell({
           <header className="sticky top-3 z-20 rounded-lg border border-zinc-200 bg-white/94 px-3 py-3 shadow-sm backdrop-blur-xl">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <Link className="rounded-lg px-2 py-1" href="/admin/dashboard">
-                  <p className="text-sm font-bold text-zinc-950">
-                    CreatorFlow Admin
-                  </p>
-                  <p className="mt-0.5 text-xs font-medium text-zinc-500">
-                    Control Center
-                  </p>
-                </Link>
+                <BrandLogo href="/admin/dashboard" label="Admin Control Center" />
 
                 <Link
                   className="premium-button-secondary w-fit rounded-lg px-4 py-2.5 text-sm font-semibold"

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 const stats = [
   ["360°", "Kooperationsworkflow"],
@@ -23,9 +24,9 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.45),transparent_32%),linear-gradient(120deg,rgba(5,150,105,0.28),rgba(15,23,42,0.2),rgba(244,114,182,0.18))] animated-gradient" />
 
         <nav className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <Link className="liquid-glass rounded-lg px-4 py-3" href="/">
-            <span className="text-sm font-black tracking-tight">CreatorFlow</span>
-          </Link>
+          <div className="liquid-glass rounded-lg px-3 py-2">
+            <BrandLogo />
+          </div>
           <div className="hidden items-center gap-2 md:flex">
             <Link className="liquid-glass rounded-lg px-4 py-3 text-sm font-semibold" href="/login">
               Einloggen

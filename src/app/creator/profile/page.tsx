@@ -151,7 +151,7 @@ export default function CreatorProfilePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField label="Vorname" value={form.firstName} onChange={(e) => updateField("firstName", e.target.value)} />
             <TextField label="Nachname" value={form.lastName} onChange={(e) => updateField("lastName", e.target.value)} />
-            <TextField label="Kuenstlername" value={form.artistName} onChange={(e) => updateField("artistName", e.target.value)} />
+            <TextField label="Künstlername" value={form.artistName} onChange={(e) => updateField("artistName", e.target.value)} />
             <TextField label="Telefon" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} />
             <TextField label="Adresse" value={form.address} onChange={(e) => updateField("address", e.target.value)} />
             <TextField label="Geburtsdatum" type="date" value={form.birthDate} onChange={(e) => updateField("birthDate", e.target.value)} />

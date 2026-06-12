@@ -3,9 +3,9 @@
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState } from "react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { TextAreaField, TextField } from "@/components/ui/form-field";
 import { auth, db, storage } from "@/lib/firebase";
 
@@ -107,12 +107,7 @@ export default function CompanyRegisterPage() {
         onSubmit={handleSubmit}
       >
         <div>
-          <Link className="inline-flex items-center gap-3" href="/">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-zinc-950 text-sm font-bold text-white">
-              CF
-            </span>
-            <span className="font-semibold">CreatorFlow</span>
-          </Link>
+          <BrandLogo />
           <h1 className="mt-7 text-3xl font-semibold tracking-tight">
             Unternehmen registrieren
           </h1>

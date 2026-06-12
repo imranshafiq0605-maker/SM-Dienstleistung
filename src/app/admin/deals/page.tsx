@@ -110,7 +110,7 @@ export default function AdminDealsPage() {
         />
       </section>
 
-      <AdminSection eyebrow="Deals" title="Kooperationen ueberwachen">
+      <AdminSection eyebrow="Deals" title="Kooperationen überwachen">
         {deals.length === 0 ? (
           <EmptyState
             text="Abgeschlossene Bewerbungen und angenommene Angebote werden als Deals hier sichtbar."

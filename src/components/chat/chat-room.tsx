@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   addDoc,
@@ -6,6 +6,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   serverTimestamp,
   setDoc,
@@ -159,9 +160,83 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
   }
 
   useEffect(() => {
-    Promise.resolve().then(() => void loadChat());
+    if (!appUser) return;
+
+    const currentUid = appUser.uid;
+    let unsubscribeConversation = () => {};
+    let unsubscribeMessages = () => {};
+    let mounted = true;
+
+    async function connectLiveChat() {
+      await loadChat();
+      if (!mounted) return;
+
+      unsubscribeConversation = onSnapshot(doc(db, "conversations", conversationId), (snapshot) => {
+        if (snapshot.exists()) {
+          setConversation({ ...(snapshot.data() as Conversation), id: snapshot.id });
+        }
+      });
+
+      unsubscribeMessages = onSnapshot(
+        query(collection(db, "messages"), where("conversationId", "==", conversationId)),
+        (snapshot) => {
+          const loadedMessages = snapshot.docs
+            .map((item) => ({ ...(item.data() as ChatMessage), id: item.id }))
+            .sort((a, b) => timeValue(a.createdAt) - timeValue(b.createdAt));
+
+          setMessages(loadedMessages);
+
+          const unreadMessages = loadedMessages.filter(
+            (message) => !message.readBy?.includes(currentUid),
+          );
+
+          if (unreadMessages.length) {
+            void Promise.all(
+              unreadMessages.map((message) =>
+                updateDoc(doc(db, "messages", message.id), {
+                  readBy: [...(message.readBy ?? []), currentUid],
+                }),
+              ),
+            ).then(() =>
+              updateDoc(doc(db, "conversations", conversationId), {
+                [`unreadBy.${currentUid}`]: 0,
+                updatedAt: serverTimestamp(),
+              }),
+            );
+          }
+        },
+      );
+    }
+
+    void connectLiveChat();
+
+    return () => {
+      mounted = false;
+      unsubscribeConversation();
+      unsubscribeMessages();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appUser, conversationId]);
+
+  useEffect(() => {
+    if (!appUser || conversation?.sourceType !== "offer") return;
+
+    const unsubscribe = onSnapshot(doc(db, "offers", conversation.sourceId), (snapshot) => {
+      if (!snapshot.exists()) return;
+
+      const loadedOffer = { ...(snapshot.data() as Offer), id: snapshot.id };
+      setOffer(loadedOffer);
+
+      if (loadedOffer.recipientId === appUser.uid && loadedOffer.status === "sent") {
+        void updateDoc(doc(db, "offers", loadedOffer.id), {
+          status: "seen",
+          updatedAt: serverTimestamp(),
+        });
+      }
+    });
+
+    return unsubscribe;
+  }, [appUser, conversation?.sourceId, conversation?.sourceType]);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -192,7 +267,6 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
     setBody("");
     setNotice("Nachricht gesendet.");
     setSending(false);
-    await loadChat(false);
   }
 
   async function acceptOffer() {
@@ -229,11 +303,13 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
     });
 
     setNotice(`Angebot angenommen. Deal erstellt: ${dealRef.id}`);
-    await loadChat(false);
   }
 
   async function counterOffer() {
-    if (!offer || !counterPrice) return;
+    if (!offer || !conversation || !appUser || !counterPrice) return;
+
+    const otherUid = conversation.participants.find((id) => id !== appUser.uid);
+    const message = `Gegenangebot: ${counterPrice} €`;
 
     await updateDoc(doc(db, "offers", offer.id), {
       price: Number(counterPrice.replace(",", ".")) || offer.price,
@@ -241,10 +317,59 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
       updatedAt: serverTimestamp(),
     });
 
-    setBody(`Gegenangebot: ${counterPrice} €`);
+    await addDoc(collection(db, "messages"), {
+      attachments: [],
+      body: message,
+      conversationId,
+      createdAt: serverTimestamp(),
+      readBy: [appUser.uid],
+      senderId: appUser.uid,
+      senderName: appUser.displayName,
+      sourceId: offer.id,
+      sourceType: "offer",
+    });
+
+    await updateDoc(doc(db, "conversations", conversation.id), {
+      lastMessage: message,
+      lastMessageAt: serverTimestamp(),
+      ...(otherUid ? { [`unreadBy.${otherUid}`]: Number(conversation.unreadBy?.[otherUid] || 0) + 1 } : {}),
+      updatedAt: serverTimestamp(),
+    });
+
     setCounterPrice("");
-    setNotice("Gegenangebot gespeichert. Du kannst es jetzt als Nachricht senden.");
-    await loadChat(false);
+    setNotice("Gegenangebot wurde gesendet.");
+  }
+
+  async function rejectOffer() {
+    if (!offer || !conversation || !appUser) return;
+
+    const otherUid = conversation.participants.find((id) => id !== appUser.uid);
+
+    await updateDoc(doc(db, "offers", offer.id), {
+      status: "rejected",
+      updatedAt: serverTimestamp(),
+    });
+
+    await addDoc(collection(db, "messages"), {
+      attachments: [],
+      body: "Angebot wurde abgelehnt.",
+      conversationId,
+      createdAt: serverTimestamp(),
+      readBy: [appUser.uid],
+      senderId: appUser.uid,
+      senderName: appUser.displayName,
+      sourceId: offer.id,
+      sourceType: "offer",
+    });
+
+    await updateDoc(doc(db, "conversations", conversation.id), {
+      lastMessage: "Angebot wurde abgelehnt.",
+      lastMessageAt: serverTimestamp(),
+      ...(otherUid ? { [`unreadBy.${otherUid}`]: Number(conversation.unreadBy?.[otherUid] || 0) + 1 } : {}),
+      updatedAt: serverTimestamp(),
+    });
+
+    setNotice("Angebot wurde abgelehnt.");
   }
 
   if (!appUser || !conversation) {
@@ -257,6 +382,9 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
 
   const otherUid = conversation.participants.find((id) => id !== appUser.uid) || "";
   const otherName = conversation.participantNames?.[otherUid] || "Kontakt";
+  const canRespondToOffer =
+    offer?.recipientId === appUser.uid &&
+    !["accepted", "deal_created", "rejected"].includes(offer.status);
 
   return (
     <section className="premium-panel overflow-hidden rounded-lg">
@@ -275,9 +403,16 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="premium-button rounded-lg px-4 py-2 text-sm font-black" onClick={() => void acceptOffer()} type="button">
-              Annehmen
-            </button>
+            {canRespondToOffer ? (
+              <>
+                <button className="premium-button rounded-lg px-4 py-2 text-sm font-black" onClick={() => void acceptOffer()} type="button">
+                  Annehmen
+                </button>
+                <button className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-black text-red-700" onClick={() => void rejectOffer()} type="button">
+                  Ablehnen
+                </button>
+              </>
+            ) : null}
             <div className="flex gap-2">
               <TextField label="Gegenangebot" onChange={(e) => setCounterPrice(e.target.value)} value={counterPrice} />
               <button className="premium-button-secondary mt-auto rounded-lg px-4 py-2 text-sm font-black" onClick={() => void counterOffer()} type="button">

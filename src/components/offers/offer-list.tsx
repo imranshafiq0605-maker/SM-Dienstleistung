@@ -5,6 +5,7 @@ import {
   collection,
   doc,
   getDocs,
+  onSnapshot,
   query,
   serverTimestamp,
   setDoc,
@@ -166,8 +167,50 @@ export function OfferList({ role }: { role: Extract<UserRole, "creator" | "compa
   }
 
   useEffect(() => {
-    Promise.resolve().then(() => void loadOffers());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!appUser) return;
+
+    const field = role === "company" ? "companyId" : "creatorId";
+    const unsubscribeOffers = onSnapshot(
+      query(collection(db, "offers"), where(field, "==", appUser.uid)),
+      (snapshot) => {
+        const loadedOffers = snapshot.docs
+          .map((item) => ({ ...(item.data() as Offer), id: item.id }))
+          .sort((a, b) => timeValue(b.createdAt) - timeValue(a.createdAt));
+
+        setOffers(loadedOffers);
+        setLoading(false);
+
+        void Promise.all(
+          loadedOffers
+            .filter((offer) => offer.recipientId === appUser.uid && offer.status === "sent")
+            .map((offer) =>
+              updateDoc(doc(db, "offers", offer.id), {
+                status: "seen",
+                updatedAt: serverTimestamp(),
+              }),
+            ),
+        );
+      },
+    );
+
+    const unsubscribeConversations = onSnapshot(
+      query(collection(db, "conversations"), where("participants", "array-contains", appUser.uid)),
+      (snapshot) => {
+        setConversations(
+          Object.fromEntries(
+            snapshot.docs.map((item) => [
+              item.id,
+              { ...(item.data() as Conversation), id: item.id },
+            ]),
+          ),
+        );
+      },
+    );
+
+    return () => {
+      unsubscribeOffers();
+      unsubscribeConversations();
+    };
   }, [appUser, role]);
 
   const receivedOffers = useMemo(

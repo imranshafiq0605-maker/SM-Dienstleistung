@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { TextField } from "@/components/ui/form-field";
 import { auth } from "@/lib/firebase";
 import { getAppUser } from "@/lib/firebase-client";
@@ -78,12 +79,7 @@ export default function AdminLoginPage() {
           onSubmit={handleSubmit}
         >
           <div>
-            <Link className="inline-flex items-center gap-3" href="/">
-              <span className="grid h-10 w-10 place-items-center rounded-lg bg-zinc-950 text-sm font-bold text-white">
-                CF
-              </span>
-              <span className="font-semibold">CreatorFlow</span>
-            </Link>
+            <BrandLogo />
             <h2 className="mt-7 text-3xl font-semibold tracking-tight">
               Admin einloggen
             </h2>

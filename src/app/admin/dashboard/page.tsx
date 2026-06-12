@@ -45,14 +45,14 @@ const adminAreas = [
   },
   {
     countKey: "openDeals",
-    description: "Deals, Angebote, Zahlstatus und Content-Workflow ueberwachen.",
+    description: "Deals, Angebote, Zahlstatus und Content-Workflow überwachen.",
     href: "/admin/deals",
     label: "Deals & Angebote",
     metric: "Offene Deals",
   },
   {
     countKey: "openDisputes",
-    description: "Streitfaelle und eskalierte Kooperationen ansehen.",
+    description: "Streitfälle und eskalierte Kooperationen ansehen.",
     href: "/admin/disputes",
     label: "Streitfall Center",
     metric: "Offene Faelle",
@@ -198,7 +198,7 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminShell
-      subtitle="Kontrolliere Freigaben, Kampagnen, Deals, Streitfaelle und Plattformgesundheit an einem Ort."
+      subtitle="Kontrolliere Freigaben, Kampagnen, Deals, Streitfälle und Plattformgesundheit an einem Ort."
       title="Admin Dashboard"
     >
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -242,7 +242,7 @@ export default function AdminDashboardPage() {
         />
         <AdminStatCard
           detail="Disputes und Deal-Flags"
-          label="Offene Streitfaelle"
+          label="Offene Streitfälle"
           value={metrics.openDisputes}
         />
       </section>
@@ -325,7 +325,7 @@ export default function AdminDashboardPage() {
               ["Unternehmen verwalten", "/admin/companies", "Verifizieren, sperren, Stammdaten sehen"],
               ["Kampagnen prüfen", "/admin/campaigns", "Briefings und Kampagnenstatus kontrollieren"],
               ["Deals & Angebote", "/admin/deals", "Kooperationen, Angebote und Zahlstatus sehen"],
-              ["Streitfaelle", "/admin/disputes", "Konflikte und Eskalationen beobachten"],
+              ["Streitfälle", "/admin/disputes", "Konflikte und Eskalationen beobachten"],
               ["Blacklist & Kategorien", "/admin/settings", "Regeln, Notizen und Kategorien pflegen"],
             ].map(([label, href, description]) => (
               <Link

@@ -50,7 +50,7 @@ export default function AdminDisputesPage() {
   return (
     <AdminShell
       subtitle="Behalte Konflikte, offene Eskalationen und markierte Deals im Blick."
-      title="Streitfaelle"
+      title="Streitfälle"
     >
       <section className="grid gap-4 md:grid-cols-4">
         <AdminStatCard
@@ -75,10 +75,10 @@ export default function AdminDisputesPage() {
         />
       </section>
 
-      <AdminSection eyebrow="Disputes" title="Offene Streitfaelle">
+      <AdminSection eyebrow="Disputes" title="Offene Streitfälle">
         {disputes.length === 0 && dealDisputes.length === 0 ? (
           <EmptyState
-            text="Aktuell gibt es keine offenen Streitfaelle oder markierten Deals."
+            text="Aktuell gibt es keine offenen Streitfälle oder markierten Deals."
             title="Alles ruhig"
           />
         ) : (

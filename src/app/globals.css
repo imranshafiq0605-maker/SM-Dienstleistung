@@ -173,6 +173,26 @@ textarea {
   animation: bounce-soft 2400ms ease-in-out infinite;
 }
 
+.brand-logo-link {
+  animation: logo-enter 820ms cubic-bezier(0.22, 1.16, 0.36, 1) both;
+}
+
+.brand-logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #020617;
+  box-shadow:
+    0 12px 32px rgb(2 6 23 / 0.18),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+.brand-logo-mark img {
+  transform: scale(1.08);
+}
+
 .hero-media {
   background-image:
     linear-gradient(180deg, rgb(7 10 18 / 0.22), rgb(7 10 18 / 0.62)),
@@ -254,6 +274,24 @@ textarea {
   }
   50% {
     transform: translateY(-8px) scale(1.03);
+  }
+}
+
+@keyframes logo-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.92);
+    filter: blur(10px);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(3px) scale(1.04);
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 

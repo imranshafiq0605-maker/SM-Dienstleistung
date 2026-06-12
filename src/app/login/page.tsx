@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { TextField } from "@/components/ui/form-field";
 import { auth } from "@/lib/firebase";
 import { getAppUser } from "@/lib/firebase-client";
@@ -41,7 +42,7 @@ export default function LoginPage() {
 
       if (userDoc.role === "admin") {
         await signOut();
-        setError("Admin-Konten melden sich ueber den separaten Admin Login an.");
+        setError("Admin-Konten melden sich über den separaten Admin Login an.");
         return;
       }
 
@@ -61,12 +62,7 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
       >
         <div>
-          <Link className="inline-flex items-center gap-3" href="/">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-zinc-950 text-sm font-bold text-white">
-              CF
-            </span>
-            <span className="font-semibold">CreatorFlow</span>
-          </Link>
+          <BrandLogo />
           <h1 className="mt-7 text-3xl font-semibold tracking-tight">
             Willkommen zurück
           </h1>
