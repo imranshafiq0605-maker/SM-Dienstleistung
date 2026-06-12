@@ -3,7 +3,13 @@
 import { collection, getDocs } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { AdminSection, AdminTable, EmptyState, StatusBadge } from "@/components/admin/admin-ui";
+import {
+  AdminSection,
+  AdminStatCard,
+  AdminTable,
+  EmptyState,
+  StatusBadge,
+} from "@/components/admin/admin-ui";
 import { db } from "@/lib/firebase";
 import type { Deal, Dispute } from "@/types/creatorflow";
 
@@ -46,6 +52,29 @@ export default function AdminDisputesPage() {
       subtitle="Behalte Konflikte, offene Eskalationen und markierte Deals im Blick."
       title="Streitfaelle"
     >
+      <section className="grid gap-4 md:grid-cols-4">
+        <AdminStatCard
+          detail="Manuell erfasste Faelle"
+          label="Disputes"
+          value={disputes.length}
+        />
+        <AdminStatCard
+          detail="Deals mit Status dispute"
+          label="Deal Flags"
+          value={dealDisputes.length}
+        />
+        <AdminStatCard
+          detail="Noch nicht geloest"
+          label="Offen"
+          value={disputes.filter((dispute) => dispute.status !== "resolved").length}
+        />
+        <AdminStatCard
+          detail="Abgeschlossen"
+          label="Geloest"
+          value={disputes.filter((dispute) => dispute.status === "resolved").length}
+        />
+      </section>
+
       <AdminSection eyebrow="Disputes" title="Offene Streitfaelle">
         {disputes.length === 0 && dealDisputes.length === 0 ? (
           <EmptyState

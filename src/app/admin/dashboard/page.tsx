@@ -218,7 +218,7 @@ export default function AdminDashboardPage() {
           value={companies.length}
         />
         <AdminStatCard
-          detail="Bei 15% Plattformfee geschätzt"
+          detail="Bei 15% Plattformfee geschaetzt"
           label="Plattformumsatz"
           value={formatCurrency(metrics.estimatedRevenue)}
         />

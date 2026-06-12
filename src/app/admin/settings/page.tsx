@@ -3,7 +3,12 @@
 import { addDoc, collection, getDocs, serverTimestamp } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { AdminSection, EmptyState, StatusBadge } from "@/components/admin/admin-ui";
+import {
+  AdminSection,
+  AdminStatCard,
+  EmptyState,
+  StatusBadge,
+} from "@/components/admin/admin-ui";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import type {
@@ -136,6 +141,24 @@ export default function AdminSettingsPage() {
       subtitle="Verwalte Blacklist, Kategorien und interne Notizen fuer operative Entscheidungen."
       title="Admin Settings"
     >
+      <section className="grid gap-4 md:grid-cols-3">
+        <AdminStatCard
+          detail="Gesperrte IDs"
+          label="Blacklist"
+          value={blacklist.length}
+        />
+        <AdminStatCard
+          detail="Aktive Kategorien"
+          label="Kategorien"
+          value={visibleCategories.length}
+        />
+        <AdminStatCard
+          detail="Interne Admin-Hinweise"
+          label="Notizen"
+          value={notes.length}
+        />
+      </section>
+
       <AdminSection eyebrow="Blacklist" title="Blacklist verwalten">
         <div className="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
           <TextField

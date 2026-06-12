@@ -3,7 +3,13 @@
 import { collection, doc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { AdminSection, AdminTable, EmptyState, StatusBadge } from "@/components/admin/admin-ui";
+import {
+  AdminSection,
+  AdminStatCard,
+  AdminTable,
+  EmptyState,
+  StatusBadge,
+} from "@/components/admin/admin-ui";
 import { db } from "@/lib/firebase";
 import type { Campaign, CampaignStatus } from "@/types/creatorflow";
 
@@ -49,6 +55,29 @@ export default function AdminCampaignsPage() {
       subtitle="Pruefe Briefings, Budgets, Produktangaben und Sichtbarkeit von Kampagnen."
       title="Kampagnen pruefen"
     >
+      <section className="grid gap-4 md:grid-cols-4">
+        <AdminStatCard
+          detail="Alle Kampagnen"
+          label="Gesamt"
+          value={campaigns.length}
+        />
+        <AdminStatCard
+          detail="Noch nicht freigegeben"
+          label="Entwurf"
+          value={campaigns.filter((campaign) => campaign.status === "draft").length}
+        />
+        <AdminStatCard
+          detail="Fuer Creator sichtbar"
+          label="Aktiv"
+          value={campaigns.filter((campaign) => campaign.status === "active").length}
+        />
+        <AdminStatCard
+          detail="Beendet oder pausiert"
+          label="Geschlossen"
+          value={campaigns.filter((campaign) => campaign.status === "closed").length}
+        />
+      </section>
+
       <AdminSection eyebrow="Campaigns" title="Kampagnenuebersicht">
         {campaigns.length === 0 ? (
           <EmptyState

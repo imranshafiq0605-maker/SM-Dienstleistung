@@ -3,7 +3,13 @@
 import { collection, doc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { AdminSection, AdminTable, EmptyState, StatusBadge } from "@/components/admin/admin-ui";
+import {
+  AdminSection,
+  AdminStatCard,
+  AdminTable,
+  EmptyState,
+  StatusBadge,
+} from "@/components/admin/admin-ui";
 import { db } from "@/lib/firebase";
 import type { Deal, DealStatus, Offer } from "@/types/creatorflow";
 
@@ -76,6 +82,34 @@ export default function AdminDealsPage() {
       subtitle="Ueberwache Angebote, laufende Kooperationen, Content-Phasen und Zahlungsstatus."
       title="Deals & Angebote"
     >
+      <section className="grid gap-4 md:grid-cols-4">
+        <AdminStatCard
+          detail="Alle Kooperationen"
+          label="Deals"
+          value={deals.length}
+        />
+        <AdminStatCard
+          detail="Noch nicht abgeschlossen"
+          label="Offen"
+          value={
+            deals.filter((deal) => !["completed", "paid_out"].includes(deal.status))
+              .length
+          }
+        />
+        <AdminStatCard
+          detail="Direkte Angebote und Anfragen"
+          label="Angebote"
+          value={offers.length}
+        />
+        <AdminStatCard
+          detail="Bei 15% Plattformfee"
+          label="Umsatz"
+          value={`${deals
+            .reduce((sum, deal) => sum + Number(deal.price || 0) * 0.15, 0)
+            .toLocaleString("de-DE")} EUR`}
+        />
+      </section>
+
       <AdminSection eyebrow="Deals" title="Kooperationen ueberwachen">
         {deals.length === 0 ? (
           <EmptyState

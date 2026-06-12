@@ -3,7 +3,13 @@
 import { collection, doc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { AdminSection, AdminTable, EmptyState, StatusBadge } from "@/components/admin/admin-ui";
+import {
+  AdminSection,
+  AdminStatCard,
+  AdminTable,
+  EmptyState,
+  StatusBadge,
+} from "@/components/admin/admin-ui";
 import { db } from "@/lib/firebase";
 import type { CompanyProfile, UserStatus } from "@/types/creatorflow";
 
@@ -53,6 +59,29 @@ export default function AdminCompaniesPage() {
       subtitle="Verifiziere Unternehmen, kontrolliere Brancheninformationen und schalte Marktplatzzugang frei."
       title="Unternehmen verwalten"
     >
+      <section className="grid gap-4 md:grid-cols-4">
+        <AdminStatCard
+          detail="Alle Firmenprofile"
+          label="Gesamt"
+          value={companies.length}
+        />
+        <AdminStatCard
+          detail="Warten auf Pruefung"
+          label="Pending"
+          value={companies.filter((company) => company.status === "pending").length}
+        />
+        <AdminStatCard
+          detail="Duerfen Creator kontaktieren"
+          label="Aktiv"
+          value={companies.filter((company) => company.status === "active").length}
+        />
+        <AdminStatCard
+          detail="Gesperrt oder abgelehnt"
+          label="Gesperrt"
+          value={companies.filter((company) => company.status === "rejected").length}
+        />
+      </section>
+
       <AdminSection eyebrow="Companies" title="Alle Unternehmensprofile">
         {companies.length === 0 ? (
           <EmptyState

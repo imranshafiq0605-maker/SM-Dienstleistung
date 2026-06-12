@@ -30,35 +30,51 @@ export function AdminShell({
     <ProtectedPage role="admin">
       <main className="premium-shell min-h-screen">
         <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-          <header className="sticky top-3 z-20 rounded-lg border border-zinc-200 bg-white/88 px-3 py-3 shadow-sm backdrop-blur-xl">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <Link className="rounded-lg px-2 py-1" href="/admin/dashboard">
-                <p className="text-sm font-bold text-zinc-950">CreatorFlow Admin</p>
-                <p className="mt-0.5 text-xs font-medium text-zinc-500">
-                  Control Center
+          <header className="sticky top-3 z-20 rounded-lg border border-zinc-200 bg-white/94 px-3 py-3 shadow-sm backdrop-blur-xl">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <Link className="rounded-lg px-2 py-1" href="/admin/dashboard">
+                  <p className="text-sm font-bold text-zinc-950">
+                    CreatorFlow Admin
+                  </p>
+                  <p className="mt-0.5 text-xs font-medium text-zinc-500">
+                    Control Center
+                  </p>
+                </Link>
+
+                <Link
+                  className="premium-button-secondary w-fit rounded-lg px-4 py-2.5 text-sm font-semibold"
+                  href="/"
+                >
+                  Zur Website
+                </Link>
+              </div>
+
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-2">
+                <p className="px-2 pb-2 text-xs font-bold uppercase tracking-wide text-zinc-500">
+                  Admin Menue
                 </p>
-              </Link>
+                <nav className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+                  {adminLinks.map((link) => {
+                    const active = pathname === link.href;
 
-              <nav className="grid gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-end">
-                {adminLinks.map((link) => {
-                  const active = pathname === link.href;
-
-                  return (
-                    <Link
-                      className={`rounded-lg px-3 py-2 text-center text-sm font-semibold ${
-                        active
-                          ? "bg-zinc-950 text-white shadow-sm"
-                          : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-950"
-                      }`}
-                      href={link.href}
-                      key={link.href}
-                    >
-                      <span className="hidden xl:inline">{link.label}</span>
-                      <span className="xl:hidden">{link.short}</span>
-                    </Link>
-                  );
-                })}
-              </nav>
+                    return (
+                      <Link
+                        className={`rounded-lg px-3 py-3 text-center text-sm font-semibold ${
+                          active
+                            ? "bg-zinc-950 text-white shadow-sm"
+                            : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-white hover:text-zinc-950"
+                        }`}
+                        href={link.href}
+                        key={link.href}
+                      >
+                        <span className="hidden 2xl:inline">{link.label}</span>
+                        <span className="2xl:hidden">{link.short}</span>
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
             </div>
           </header>
 
@@ -75,10 +91,10 @@ export function AdminShell({
                   </p>
                 </div>
                 <Link
-                  className="premium-button-secondary w-fit rounded-lg px-4 py-2.5 text-sm font-semibold"
-                  href="/"
+                  className="premium-button w-fit rounded-lg px-4 py-2.5 text-sm font-semibold"
+                  href="/admin/dashboard"
                 >
-                  Zur Website
+                  Admin Dashboard
                 </Link>
               </div>
             </div>
