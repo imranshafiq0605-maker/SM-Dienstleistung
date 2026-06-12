@@ -39,18 +39,24 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-6 py-12 text-zinc-950">
+    <main className="premium-shell flex min-h-screen items-center justify-center px-4 py-12 text-zinc-950 sm:px-6">
       <form
-        className="grid w-full max-w-md gap-5 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm"
+        className="premium-panel grid w-full max-w-md gap-5 rounded-lg p-6 sm:p-8"
         onSubmit={handleSubmit}
       >
         <div>
-          <Link className="text-sm font-semibold text-zinc-500" href="/">
-            CreatorFlow
+          <Link className="inline-flex items-center gap-3" href="/">
+            <span className="grid h-10 w-10 place-items-center rounded-lg bg-zinc-950 text-sm font-bold text-white">
+              CF
+            </span>
+            <span className="font-semibold">CreatorFlow</span>
           </Link>
-          <h1 className="mt-3 text-3xl font-semibold">Login</h1>
-          <p className="mt-2 text-sm text-zinc-500">
-            Melde dich mit deinem Firebase Auth Account an.
+          <h1 className="mt-7 text-3xl font-semibold tracking-tight">
+            Willkommen zurueck.
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-zinc-500">
+            Melde dich an, um Kampagnen, Deals, Chat und Content-Freigaben zu
+            verwalten.
           </p>
         </div>
 
@@ -73,14 +79,14 @@ export default function LoginPage() {
         {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
 
         <button
-          className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-400"
+          className="premium-button rounded-lg px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:bg-zinc-400"
           disabled={submitting}
           type="submit"
         >
           {submitting ? "Melde an..." : "Einloggen"}
         </button>
 
-        <div className="grid gap-2 text-sm text-zinc-600 sm:grid-cols-2">
+        <div className="grid gap-2 rounded-lg border border-zinc-200 bg-white/70 p-3 text-sm font-medium text-zinc-600 sm:grid-cols-2">
           <Link href="/register/creator">Creator registrieren</Link>
           <Link href="/register/company">Unternehmen registrieren</Link>
         </div>

@@ -124,17 +124,22 @@ export default function CreatorRegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-10 text-zinc-950">
+    <main className="premium-shell min-h-screen px-4 py-10 text-zinc-950 sm:px-6">
       <form
-        className="mx-auto grid w-full max-w-3xl gap-6 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm"
+        className="premium-panel mx-auto grid w-full max-w-4xl gap-7 rounded-lg p-6 sm:p-8"
         onSubmit={handleSubmit}
       >
         <div>
-          <Link className="text-sm font-semibold text-zinc-500" href="/">
-            CreatorFlow
+          <Link className="inline-flex items-center gap-3" href="/">
+            <span className="grid h-10 w-10 place-items-center rounded-lg bg-zinc-950 text-sm font-bold text-white">
+              CF
+            </span>
+            <span className="font-semibold">CreatorFlow</span>
           </Link>
-          <h1 className="mt-3 text-3xl font-semibold">Creator registrieren</h1>
-          <p className="mt-2 text-sm text-zinc-500">
+          <h1 className="mt-7 text-3xl font-semibold tracking-tight">
+            Creator Profil anlegen
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
             Dein Profil wird nach der Registrierung vom Admin freigegeben.
           </p>
         </div>
@@ -157,7 +162,7 @@ export default function CreatorRegisterPage() {
         />
 
         <fieldset className="grid gap-3">
-          <legend className="text-sm font-medium text-zinc-700">Kategorien</legend>
+          <legend className="text-sm font-semibold text-zinc-700">Kategorien</legend>
           <div className="flex flex-wrap gap-2">
             {creatorCategories.map((category) => (
               <button
@@ -176,7 +181,7 @@ export default function CreatorRegisterPage() {
           </div>
         </fieldset>
 
-        <label className="grid gap-2 text-sm font-medium text-zinc-700">
+        <label className="grid gap-2 text-sm font-semibold text-zinc-700">
           Profilbild
           <input accept="image/*" onChange={handleFile} type="file" />
         </label>
@@ -184,7 +189,7 @@ export default function CreatorRegisterPage() {
         {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
 
         <button
-          className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-400"
+          className="premium-button rounded-lg px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:bg-zinc-400"
           disabled={submitting}
           type="submit"
         >
