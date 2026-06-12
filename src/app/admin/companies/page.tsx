@@ -1,6 +1,7 @@
 "use client";
 
 import { collection, doc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import {
@@ -105,6 +106,12 @@ export default function AdminCompaniesPage() {
                 </p>
                 <StatusBadge status={company.status} />
                 <div className="flex flex-wrap gap-2">
+                  <Link
+                    className="premium-button-secondary rounded-lg px-3 py-2 text-sm font-semibold"
+                    href={`/admin/companies/${company.uid}`}
+                  >
+                    Öffnen
+                  </Link>
                   <button
                     className="premium-button rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50"
                     disabled={updatingUid === company.uid}
