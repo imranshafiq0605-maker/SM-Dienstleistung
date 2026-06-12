@@ -1,15 +1,22 @@
 "use client";
 
-import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { db } from "@/lib/firebase";
-import type { Conversation, UserRole } from "@/types/creatorflow";
+import type { Conversation, FirestoreDate, UserRole } from "@/types/creatorflow";
+
+function timeValue(value: FirestoreDate) {
+  if (!value) return 0;
+  if ("toMillis" in value) return value.toMillis();
+  return value.getTime();
+}
 
 export function ChatList({ role }: { role: Extract<UserRole, "creator" | "company"> }) {
   const { appUser } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,17 +26,29 @@ export function ChatList({ role }: { role: Extract<UserRole, "creator" | "compan
       query(
         collection(db, "conversations"),
         where("participants", "array-contains", appUser.uid),
-        orderBy("lastMessageAt", "desc"),
       ),
-    ).then((snapshot) => {
-      setConversations(
-        snapshot.docs.map((item) => ({
+    )
+      .then((snapshot) => {
+        const loaded = snapshot.docs.map((item) => ({
           ...(item.data() as Conversation),
           id: item.id,
-        })),
-      );
-      setLoading(false);
-    });
+        }));
+
+        setConversations(
+          loaded.sort((a, b) => {
+            return timeValue(b.lastMessageAt) - timeValue(a.lastMessageAt);
+          }),
+        );
+        setLoading(false);
+      })
+      .catch((chatError) => {
+        setError(
+          chatError instanceof Error
+            ? chatError.message
+            : "Chats konnten nicht geladen werden.",
+        );
+        setLoading(false);
+      });
   }, [appUser]);
 
   return (
@@ -40,6 +59,12 @@ export function ChatList({ role }: { role: Extract<UserRole, "creator" | "compan
           {loading ? "Chats werden geladen..." : `${conversations.length} Chats`}
         </h1>
       </div>
+
+      {error ? (
+        <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+          {error}
+        </p>
+      ) : null}
 
       <div className="grid gap-3">
         {conversations.map((conversation) => {

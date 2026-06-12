@@ -6,9 +6,9 @@ import {
   doc,
   getDoc,
   getDocs,
-  orderBy,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -16,7 +16,13 @@ import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { TextAreaField, TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
-import type { ChatMessage, Conversation, Deal, Offer } from "@/types/creatorflow";
+import type { ChatMessage, Conversation, Deal, FirestoreDate, Offer } from "@/types/creatorflow";
+
+function timeValue(value: FirestoreDate) {
+  if (!value) return 0;
+  if ("toMillis" in value) return value.toMillis();
+  return value.getTime();
+}
 
 function ticks(message: ChatMessage, currentUid: string) {
   if (message.senderId !== currentUid) return "";
@@ -24,6 +30,29 @@ function ticks(message: ChatMessage, currentUid: string) {
   if (readCount >= 2) return "✓✓";
   if (readCount === 1) return "✓";
   return "✓";
+}
+
+function repairedConversationFromOffer(offer: Offer): Conversation {
+  return {
+    id: `offer_${offer.id}`,
+    companyId: offer.companyId,
+    createdAt: null,
+    creatorId: offer.creatorId,
+    lastMessage: offer.briefing || offer.message || offer.service || "Neues Angebot",
+    lastMessageAt: offer.createdAt,
+    participantNames: {
+      [offer.senderId]: offer.senderName,
+      [offer.recipientId]: offer.recipientName,
+    },
+    participants: [offer.senderId, offer.recipientId],
+    sourceId: offer.id,
+    sourceType: "offer",
+    title: offer.service || "Direktes Angebot",
+    unreadBy: {
+      [offer.senderId]: 0,
+      [offer.recipientId]: offer.status === "sent" ? 1 : 0,
+    },
+  };
 }
 
 export function ChatRoom({ conversationId }: { conversationId: string }) {
@@ -45,25 +74,70 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
         query(
           collection(db, "messages"),
           where("conversationId", "==", conversationId),
-          orderBy("createdAt", "asc"),
         ),
       ),
     ]);
 
-    const loadedConversation = conversationSnapshot.exists()
+    let loadedConversation = conversationSnapshot.exists()
       ? ({ ...(conversationSnapshot.data() as Conversation), id: conversationSnapshot.id })
       : null;
+
+    if (!loadedConversation && conversationId.startsWith("offer_")) {
+      const offerId = conversationId.replace("offer_", "");
+      const offerSnapshot = await getDoc(doc(db, "offers", offerId));
+      const loadedOffer = offerSnapshot.exists()
+        ? ({ ...(offerSnapshot.data() as Offer), id: offerSnapshot.id })
+        : null;
+
+      if (
+        loadedOffer &&
+        (loadedOffer.senderId === appUser.uid || loadedOffer.recipientId === appUser.uid)
+      ) {
+        loadedConversation = repairedConversationFromOffer(loadedOffer);
+        await setDoc(
+          doc(db, "conversations", loadedConversation.id),
+          {
+            companyId: loadedConversation.companyId,
+            createdAt: serverTimestamp(),
+            creatorId: loadedConversation.creatorId,
+            lastMessage: loadedConversation.lastMessage,
+            lastMessageAt: serverTimestamp(),
+            participantNames: loadedConversation.participantNames,
+            participants: loadedConversation.participants,
+            sourceId: loadedConversation.sourceId,
+            sourceType: loadedConversation.sourceType,
+            title: loadedConversation.title,
+            unreadBy: loadedConversation.unreadBy,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true },
+        );
+      }
+    }
 
     setConversation(loadedConversation);
     const loadedMessages = messagesSnapshot.docs.map((item) => ({
       ...(item.data() as ChatMessage),
       id: item.id,
-    }));
+    })).sort((a, b) => {
+      return timeValue(a.createdAt) - timeValue(b.createdAt);
+    });
     setMessages(loadedMessages);
 
     if (loadedConversation?.sourceType === "offer") {
       const offerSnapshot = await getDoc(doc(db, "offers", loadedConversation.sourceId));
-      setOffer(offerSnapshot.exists() ? ({ ...(offerSnapshot.data() as Offer), id: offerSnapshot.id }) : null);
+      const loadedOffer = offerSnapshot.exists()
+        ? ({ ...(offerSnapshot.data() as Offer), id: offerSnapshot.id })
+        : null;
+      setOffer(loadedOffer);
+
+      if (loadedOffer?.recipientId === appUser.uid && loadedOffer.status === "sent") {
+        await updateDoc(doc(db, "offers", loadedOffer.id), {
+          status: "seen",
+          updatedAt: serverTimestamp(),
+        });
+        setOffer({ ...loadedOffer, status: "seen" });
+      }
     }
 
     if (markRead && loadedConversation) {

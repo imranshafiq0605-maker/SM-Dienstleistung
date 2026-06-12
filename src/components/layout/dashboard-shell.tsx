@@ -36,6 +36,7 @@ export function DashboardShell({
           { href: "/creator/socials", icon: "network", label: "Socials" },
           { href: "/creator/campaigns", icon: "ticket", label: "Kampagnen" },
           { href: "/creator/chats", icon: "chat", label: "Chats" },
+          { href: "/creator/offers", icon: "ticket", label: "Angebote" },
           { href: "/creator/deals", icon: "wallet", label: "Deals" },
           { href: "/creator/company-search", icon: "briefcase", label: "Firmen" },
           { href: "/creator/media-kit", icon: "bars", label: "Media Kit" },
@@ -47,9 +48,9 @@ export function DashboardShell({
             { href: "/company/creator-search", icon: "user", label: "Creator" },
             { href: "/company/campaigns/new", icon: "ticket", label: "Kampagne" },
             { href: "/company/chats", icon: "chat", label: "Chats" },
+            { href: "/company/offers", icon: "ticket", label: "Angebote" },
             { href: "/company/deals", icon: "wallet", label: "Deals" },
             { href: "/company/applications", icon: "bars", label: "Bewerbungen" },
-            { href: "/company/offers/new", icon: "chat", label: "Angebote" },
           ]
         : [];
   const [unreadChats, setUnreadChats] = useState(0);
