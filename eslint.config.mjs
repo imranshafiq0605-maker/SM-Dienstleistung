@@ -5,24 +5,13 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-<<<<<<< HEAD
   globalIgnores([
-=======
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
->>>>>>> f19fbb24007937f9ee47185f268473795d462b63
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
-<<<<<<< HEAD
-    "node_modules/**",
-    "sm-dienstleistung/.next/**",
-    "sm-dienstleistung/node_modules/**",
-=======
->>>>>>> f19fbb24007937f9ee47185f268473795d462b63
-  ]),
+    "node_modules/**"
+  ])
 ]);
 
 export default eslintConfig;
