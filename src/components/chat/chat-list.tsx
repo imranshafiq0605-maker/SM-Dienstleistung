@@ -2,8 +2,9 @@
 
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import type { Conversation, FirestoreDate, UserRole } from "@/types/creatorflow";
 
@@ -18,6 +19,7 @@ export function ChatList({ role }: { role: Extract<UserRole, "creator" | "compan
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (!appUser) return;
@@ -50,6 +52,26 @@ export function ChatList({ role }: { role: Extract<UserRole, "creator" | "compan
     return unsubscribe;
   }, [appUser]);
 
+  const filteredConversations = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return conversations;
+
+    return conversations.filter((conversation) => {
+      const otherId = conversation.participants.find((id) => id !== appUser?.uid) || "";
+      const otherName = conversation.participantNames?.[otherId] || "";
+      const haystack = [
+        otherName,
+        conversation.title,
+        conversation.lastMessage,
+        ...Object.values(conversation.participantNames || {}),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(term);
+    });
+  }, [appUser?.uid, conversations, search]);
+
   return (
     <section className="grid gap-4">
       <div className="premium-panel rounded-lg p-6">
@@ -57,6 +79,15 @@ export function ChatList({ role }: { role: Extract<UserRole, "creator" | "compan
         <h1 className="mt-2 text-3xl font-black tracking-tight">
           {loading ? "Chats werden geladen..." : `${conversations.length} Chats`}
         </h1>
+        <div className="mt-5 max-w-xl">
+          <TextField
+            label="Chats suchen"
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Name, Chat oder Nachricht suchen"
+            type="search"
+            value={search}
+          />
+        </div>
       </div>
 
       {error ? (
@@ -66,7 +97,7 @@ export function ChatList({ role }: { role: Extract<UserRole, "creator" | "compan
       ) : null}
 
       <div className="grid gap-3">
-        {conversations.map((conversation) => {
+        {filteredConversations.map((conversation) => {
           const unread = appUser ? Number(conversation.unreadBy?.[appUser.uid] || 0) : 0;
           const otherId = conversation.participants.find((id) => id !== appUser?.uid) || "";
           const otherName = conversation.participantNames?.[otherId] || "Kontakt";
@@ -103,6 +134,12 @@ export function ChatList({ role }: { role: Extract<UserRole, "creator" | "compan
         <p className="premium-panel rounded-lg p-6 text-sm text-zinc-500">
           Noch keine Chats. Sobald du ein Angebot oder eine Anfrage sendest,
           entsteht automatisch ein Chat.
+        </p>
+      ) : null}
+
+      {!loading && conversations.length > 0 && filteredConversations.length === 0 ? (
+        <p className="premium-panel rounded-lg p-6 text-sm text-zinc-500">
+          Keine Chats für diese Suche gefunden.
         </p>
       ) : null}
     </section>

@@ -1,6 +1,6 @@
 "use client";
 
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -17,9 +17,9 @@ const dealStatusLabels: Record<Deal["status"], string> = {
   content_in_progress: "Content in Arbeit",
   content_uploaded: "Content hochgeladen",
   feedback_open: "Feedback offen",
-  revision: "Ueberarbeitung",
+  revision: "Überarbeitung",
   approved: "Freigegeben",
-  published: "Veroeffentlicht",
+  published: "Veröffentlicht",
   completed: "Abgeschlossen",
   payout_open: "Auszahlung offen",
   paid_out: "Ausgezahlt",
@@ -30,13 +30,15 @@ export function DealList({ role }: { role: Extract<UserRole, "creator" | "compan
   const { appUser } = useAuth();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!appUser) return;
 
     const field = role === "creator" ? "creatorId" : "companyId";
 
-    getDocs(query(collection(db, "deals"), where(field, "==", appUser.uid))).then(
+    const unsubscribe = onSnapshot(
+      query(collection(db, "deals"), where(field, "==", appUser.uid)),
       (snapshot) => {
         setDeals(
           snapshot.docs.map((dealDoc) => ({
@@ -44,9 +46,16 @@ export function DealList({ role }: { role: Extract<UserRole, "creator" | "compan
             id: dealDoc.id,
           })),
         );
+        setError("");
+        setLoading(false);
+      },
+      (dealError) => {
+        setError(dealError.message || "Deals konnten nicht geladen werden.");
         setLoading(false);
       },
     );
+
+    return unsubscribe;
   }, [appUser, role]);
 
   return (
@@ -56,9 +65,15 @@ export function DealList({ role }: { role: Extract<UserRole, "creator" | "compan
           Kooperationen
         </p>
         <h2 className="mt-2 text-2xl font-semibold">
-          {loading ? "Laedt..." : `${deals.length} Deals`}
+          {loading ? "Lädt..." : `${deals.length} Deals`}
         </h2>
       </div>
+
+      {error ? (
+        <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+          {error}
+        </p>
+      ) : null}
 
       {deals.map((deal) => (
         <article className="grid gap-3 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm" key={deal.id}>
@@ -80,7 +95,7 @@ export function DealList({ role }: { role: Extract<UserRole, "creator" | "compan
             <div><dt className="text-zinc-500">Format</dt><dd>{deal.format || "-"}</dd></div>
           </dl>
           <Link className="w-fit rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white" href={`/${role}/deals/${deal.id}`}>
-            Deal oeffnen
+            Deal öffnen
           </Link>
         </article>
       ))}

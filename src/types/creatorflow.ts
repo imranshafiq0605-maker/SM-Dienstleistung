@@ -234,6 +234,8 @@ export interface Offer {
   cancellationRules: string;
   status: OfferStatus;
   message?: string;
+  counterOfferBy?: string;
+  counterOfferAt?: FirestoreDate;
   createdAt: FirestoreDate;
   updatedAt?: FirestoreDate;
 }

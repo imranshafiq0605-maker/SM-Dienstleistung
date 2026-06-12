@@ -4,9 +4,7 @@ import {
   addDoc,
   collection,
   doc,
-  getDoc,
-  getDocs,
-  orderBy,
+  onSnapshot,
   query,
   serverTimestamp,
   updateDoc,
@@ -17,7 +15,13 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import { uploadProfileFiles } from "@/lib/storage-upload";
-import type { ChatMessage, ContentSubmission, Deal, DealStatus, UserRole } from "@/types/creatorflow";
+import type { ChatMessage, ContentSubmission, Deal, DealStatus, FirestoreDate, UserRole } from "@/types/creatorflow";
+
+function timeValue(value: FirestoreDate) {
+  if (!value) return 0;
+  if ("toMillis" in value) return value.toMillis();
+  return value.getTime();
+}
 
 const dealStatusOptions: { value: DealStatus; label: string }[] = [
   { value: "contract_open", label: "Vertrag offen" },
@@ -29,9 +33,9 @@ const dealStatusOptions: { value: DealStatus; label: string }[] = [
   { value: "content_in_progress", label: "Content in Arbeit" },
   { value: "content_uploaded", label: "Content hochgeladen" },
   { value: "feedback_open", label: "Feedback offen" },
-  { value: "revision", label: "Ueberarbeitung" },
+  { value: "revision", label: "Überarbeitung" },
   { value: "approved", label: "Freigegeben" },
-  { value: "published", label: "Veroeffentlicht" },
+  { value: "published", label: "Veröffentlicht" },
   { value: "completed", label: "Abgeschlossen" },
   { value: "payout_open", label: "Auszahlung offen" },
   { value: "paid_out", label: "Ausgezahlt" },
@@ -58,36 +62,54 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
   const [feedback, setFeedback] = useState("");
   const [review, setReview] = useState(initialReview);
   const [notice, setNotice] = useState("");
-
-  async function loadWorkspace() {
-    const [dealSnapshot, messagesSnapshot, submissionsSnapshot] = await Promise.all([
-      getDoc(doc(db, "deals", dealId)),
-      getDocs(query(collection(db, "messages"), where("conversationId", "==", `deal_${dealId}`), orderBy("createdAt", "asc"))),
-      getDocs(query(collection(db, "contentSubmissions"), where("dealId", "==", dealId))),
-    ]);
-
-    setDeal(dealSnapshot.exists() ? ({ ...(dealSnapshot.data() as Deal), id: dealSnapshot.id }) : null);
-    setMessages(messagesSnapshot.docs.map((messageDoc) => ({ ...(messageDoc.data() as ChatMessage), id: messageDoc.id })));
-    setSubmissions(submissionsSnapshot.docs.map((submissionDoc) => ({ ...(submissionDoc.data() as ContentSubmission), id: submissionDoc.id })));
-  }
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    let mounted = true;
+    const unsubscribeDeal = onSnapshot(
+      doc(db, "deals", dealId),
+      (snapshot) => {
+        setDeal(snapshot.exists() ? ({ ...(snapshot.data() as Deal), id: snapshot.id }) : null);
+        setLoading(false);
+      },
+      (dealError) => {
+        setError(dealError.message || "Deal konnte nicht geladen werden.");
+        setLoading(false);
+      },
+    );
 
-    Promise.all([
-      getDoc(doc(db, "deals", dealId)),
-      getDocs(query(collection(db, "messages"), where("conversationId", "==", `deal_${dealId}`), orderBy("createdAt", "asc"))),
-      getDocs(query(collection(db, "contentSubmissions"), where("dealId", "==", dealId))),
-    ]).then(([dealSnapshot, messagesSnapshot, submissionsSnapshot]) => {
-      if (!mounted) return;
+    const unsubscribeMessages = onSnapshot(
+      query(collection(db, "messages"), where("conversationId", "==", `deal_${dealId}`)),
+      (snapshot) => {
+        setMessages(
+          snapshot.docs
+            .map((messageDoc) => ({ ...(messageDoc.data() as ChatMessage), id: messageDoc.id }))
+            .sort((a, b) => timeValue(a.createdAt) - timeValue(b.createdAt)),
+        );
+      },
+      (messageError) => {
+        setError(messageError.message || "Deal-Nachrichten konnten nicht geladen werden.");
+      },
+    );
 
-      setDeal(dealSnapshot.exists() ? ({ ...(dealSnapshot.data() as Deal), id: dealSnapshot.id }) : null);
-      setMessages(messagesSnapshot.docs.map((messageDoc) => ({ ...(messageDoc.data() as ChatMessage), id: messageDoc.id })));
-      setSubmissions(submissionsSnapshot.docs.map((submissionDoc) => ({ ...(submissionDoc.data() as ContentSubmission), id: submissionDoc.id })));
-    });
+    const unsubscribeSubmissions = onSnapshot(
+      query(collection(db, "contentSubmissions"), where("dealId", "==", dealId)),
+      (snapshot) => {
+        setSubmissions(
+          snapshot.docs
+            .map((submissionDoc) => ({ ...(submissionDoc.data() as ContentSubmission), id: submissionDoc.id }))
+            .sort((a, b) => timeValue(b.createdAt) - timeValue(a.createdAt)),
+        );
+      },
+      (submissionError) => {
+        setError(submissionError.message || "Content konnte nicht geladen werden.");
+      },
+    );
 
     return () => {
-      mounted = false;
+      unsubscribeDeal();
+      unsubscribeMessages();
+      unsubscribeSubmissions();
     };
   }, [dealId]);
 
@@ -109,7 +131,6 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
     });
     setMessageBody("");
     setMessageFiles(null);
-    await loadWorkspace();
   }
 
   async function markMessagesRead() {
@@ -124,7 +145,6 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
           }),
         ),
     );
-    await loadWorkspace();
   }
 
   async function submitContent(event: FormEvent<HTMLFormElement>) {
@@ -150,7 +170,6 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
     setContentForm({ caption: "", postLink: "" });
     setContentFiles(null);
     setNotice("Content wurde hochgeladen.");
-    await loadWorkspace();
   }
 
   async function updateSubmission(submission: ContentSubmission, status: ContentSubmission["status"]) {
@@ -164,7 +183,6 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
       updatedAt: serverTimestamp(),
     });
     setFeedback("");
-    await loadWorkspace();
   }
 
   async function updateDealStatus(status: DealStatus) {
@@ -172,7 +190,6 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
       status,
       updatedAt: serverTimestamp(),
     });
-    await loadWorkspace();
   }
 
   async function submitReview(event: FormEvent<HTMLFormElement>) {
@@ -209,10 +226,30 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
     setNotice("Bewertung gespeichert.");
   }
 
+  if (loading) {
+    return (
+      <section className="premium-panel rounded-lg p-6">
+        <p className="text-sm text-zinc-500">Deal wird geladen...</p>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="rounded-lg border border-red-200 bg-red-50 p-6">
+        <p className="text-sm font-semibold text-red-700">Deal konnte nicht geladen werden.</p>
+        <p className="mt-2 text-sm text-red-600">{error}</p>
+      </section>
+    );
+  }
+
   if (!deal) {
     return (
-      <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-        <p className="text-sm text-zinc-500">Deal wird geladen...</p>
+      <section className="premium-panel rounded-lg p-6">
+        <p className="text-sm font-semibold text-zinc-700">Deal nicht gefunden.</p>
+        <p className="mt-2 text-sm text-zinc-500">
+          Dieser Deal existiert nicht mehr oder du hast keinen Zugriff darauf.
+        </p>
       </section>
     );
   }
@@ -280,7 +317,7 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
             <article className="grid gap-3 rounded-lg border border-zinc-200 p-4" key={submission.id}>
               <p className="font-semibold">Status: {submission.status}</p>
               <p className="text-sm text-zinc-600">{submission.caption || "Keine Caption"}</p>
-              {submission.postLink ? <a className="text-sm font-medium underline" href={submission.postLink} rel="noreferrer" target="_blank">Post-Link oeffnen</a> : null}
+              {submission.postLink ? <a className="text-sm font-medium underline" href={submission.postLink} rel="noreferrer" target="_blank">Post-Link öffnen</a> : null}
               <div className="flex flex-wrap gap-2">
                 {submission.files?.map((file) => (
                   <a className="rounded-full border border-zinc-300 px-3 py-2 text-sm font-medium" href={file.url} key={file.path} rel="noreferrer" target="_blank">{file.name}</a>
@@ -305,9 +342,9 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
         <h2 className="text-2xl font-semibold">Bewertung</h2>
         <form className="grid gap-4" onSubmit={(event) => void submitReview(event)}>
           <div className="grid gap-4 sm:grid-cols-4">
-            <TextField label={role === "company" ? "Qualitaet" : "Kommunikation"} max="5" min="1" type="number" value={review.first} onChange={(event) => setReview((current) => ({ ...current, first: event.target.value }))} />
+            <TextField label={role === "company" ? "Qualität" : "Kommunikation"} max="5" min="1" type="number" value={review.first} onChange={(event) => setReview((current) => ({ ...current, first: event.target.value }))} />
             <TextField label={role === "company" ? "Kommunikation" : "Zahlungsabwicklung"} max="5" min="1" type="number" value={review.second} onChange={(event) => setReview((current) => ({ ...current, second: event.target.value }))} />
-            <TextField label={role === "company" ? "Puenktlichkeit" : "Briefing Klarheit"} max="5" min="1" type="number" value={review.third} onChange={(event) => setReview((current) => ({ ...current, third: event.target.value }))} />
+            <TextField label={role === "company" ? "Pünktlichkeit" : "Briefing Klarheit"} max="5" min="1" type="number" value={review.third} onChange={(event) => setReview((current) => ({ ...current, third: event.target.value }))} />
             <TextField label={role === "company" ? "Briefing eingehalten" : "Fairness"} max="5" min="1" type="number" value={review.fourth} onChange={(event) => setReview((current) => ({ ...current, fourth: event.target.value }))} />
           </div>
           <TextAreaField label="Notiz" value={review.note} onChange={(event) => setReview((current) => ({ ...current, note: event.target.value }))} />

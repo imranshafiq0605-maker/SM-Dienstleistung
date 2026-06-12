@@ -27,10 +27,8 @@ function timeValue(value: FirestoreDate) {
 
 function ticks(message: ChatMessage, currentUid: string) {
   if (message.senderId !== currentUid) return "";
-  const readCount = message.readBy?.length || 0;
-  if (readCount >= 2) return "✓✓";
-  if (readCount === 1) return "✓";
-  return "✓";
+  const otherRead = message.readBy?.some((uid) => uid !== currentUid);
+  return otherRead ? "✓✓" : "✓";
 }
 
 function repairedConversationFromOffer(offer: Offer): Conversation {
@@ -312,6 +310,8 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
     const message = `Gegenangebot: ${counterPrice} €`;
 
     await updateDoc(doc(db, "offers", offer.id), {
+      counterOfferAt: serverTimestamp(),
+      counterOfferBy: appUser.uid,
       price: Number(counterPrice.replace(",", ".")) || offer.price,
       status: "counter_offer",
       updatedAt: serverTimestamp(),
@@ -383,8 +383,11 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
   const otherUid = conversation.participants.find((id) => id !== appUser.uid) || "";
   const otherName = conversation.participantNames?.[otherUid] || "Kontakt";
   const canRespondToOffer =
-    offer?.recipientId === appUser.uid &&
-    !["accepted", "deal_created", "rejected"].includes(offer.status);
+    !!offer &&
+    !["accepted", "deal_created", "rejected"].includes(offer.status) &&
+    (offer.status === "counter_offer"
+      ? offer.counterOfferBy !== appUser.uid
+      : offer.recipientId === appUser.uid);
 
   return (
     <section className="premium-panel overflow-hidden rounded-lg">
@@ -438,7 +441,7 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
               key={message.id}
             >
               <p className="text-sm leading-6">{message.body}</p>
-              <p className={`mt-1 text-right text-xs ${mine && read === "✓✓" && (message.readBy?.length || 0) > 1 ? "text-cyan-300" : mine ? "text-white/55" : "text-zinc-400"}`}>
+              <p className={`mt-1 text-right text-xs ${mine && read === "✓✓" ? "text-cyan-300" : mine ? "text-white/55" : "text-zinc-400"}`}>
                 {mine ? read : ""}
               </p>
             </article>

@@ -281,6 +281,8 @@ export function OfferList({ role }: { role: Extract<UserRole, "creator" | "compa
     if (!value) return;
 
     await updateDoc(doc(db, "offers", offer.id), {
+      counterOfferAt: serverTimestamp(),
+      counterOfferBy: appUser?.uid,
       price: Number(value.replace(",", ".")) || offer.price,
       status: "counter_offer",
       updatedAt: serverTimestamp(),
@@ -315,6 +317,12 @@ export function OfferList({ role }: { role: Extract<UserRole, "creator" | "compa
     const otherName = mode === "received" ? offer.senderName : offer.recipientName;
     const conversation = conversations[conversationId(offer.id)];
     const unread = appUser ? Number(conversation?.unreadBy?.[appUser.uid] || 0) : 0;
+    const canDecide =
+      !!appUser &&
+      !["accepted", "deal_created", "rejected"].includes(offer.status) &&
+      (offer.status === "counter_offer"
+        ? offer.counterOfferBy !== appUser.uid
+        : offer.recipientId === appUser.uid);
 
     return (
       <article className="premium-card rounded-lg p-5">
@@ -341,7 +349,7 @@ export function OfferList({ role }: { role: Extract<UserRole, "creator" | "compa
           <Link className="premium-button-secondary rounded-lg px-4 py-2.5 text-sm font-black" href={`/${role}/chats/${conversationId(offer.id)}`}>
             Chat öffnen {unread ? `(${unread})` : ""}
           </Link>
-          {mode === "received" ? (
+          {canDecide ? (
             <>
               <button className="premium-button rounded-lg px-4 py-2.5 text-sm font-black" onClick={() => void acceptOffer(offer)} type="button">
                 Annehmen
