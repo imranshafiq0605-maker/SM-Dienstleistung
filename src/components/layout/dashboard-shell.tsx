@@ -17,17 +17,6 @@ const statusStyles = {
   rejected: "border-red-200 bg-red-50 text-red-800",
 };
 
-function NavLink({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      className="rounded-lg border border-zinc-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-zinc-700 shadow-[0_1px_2px_rgb(20_20_17/0.04)] hover:border-zinc-300 hover:bg-white hover:text-zinc-950"
-      href={href}
-    >
-      {label}
-    </Link>
-  );
-}
-
 export function DashboardShell({
   children,
   title,
@@ -103,17 +92,6 @@ export function DashboardShell({
             </button>
           </div>
         </header>
-
-        {navItems.length ? (
-          <nav className="hidden rounded-lg border border-zinc-200 bg-white/55 p-2 shadow-[0_1px_2px_rgb(20_20_17/0.04)] backdrop-blur md:flex md:flex-wrap md:gap-2">
-            <span className="rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-black text-white">
-              Menü
-            </span>
-            {navItems.map((item) => (
-              <NavLink href={item.href} key={item.href} label={item.label} />
-            ))}
-          </nav>
-        ) : null}
 
         <div className="contents">{children}</div>
       </div>

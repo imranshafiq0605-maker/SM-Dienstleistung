@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { ProtectedPage } from "@/components/auth/protected-page";
 import { PillBottomNav, type PillNavItem } from "@/components/layout/pill-bottom-nav";
@@ -25,8 +24,6 @@ export function AdminShell({
   subtitle: string;
   children: ReactNode;
 }) {
-  const pathname = usePathname();
-
   return (
     <ProtectedPage role="admin">
       <main className="premium-shell min-h-screen pb-32">
@@ -49,34 +46,6 @@ export function AdminShell({
                 >
                   Zur Website
                 </Link>
-              </div>
-
-              <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-2">
-                <p className="px-2 pb-2 text-xs font-bold uppercase tracking-wide text-zinc-500">
-                  Admin Menü
-                </p>
-                <nav className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-                  {adminLinks.map((link) => {
-                    const active =
-                      pathname === link.href ||
-                      (link.href !== "/admin/dashboard" && pathname.startsWith(link.href));
-
-                    return (
-                      <Link
-                        className={`rounded-lg px-3 py-3 text-center text-sm font-semibold ${
-                          active
-                            ? "bg-zinc-950 text-white shadow-sm"
-                            : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-white hover:text-zinc-950"
-                        }`}
-                        href={link.href}
-                        key={link.href}
-                      >
-                        <span className="hidden 2xl:inline">{link.label}</span>
-                        <span className="2xl:hidden">{link.short}</span>
-                      </Link>
-                    );
-                  })}
-                </nav>
               </div>
             </div>
           </header>
