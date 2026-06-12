@@ -26,7 +26,7 @@ export function AdminShell({
 }) {
   return (
     <ProtectedPage role="admin">
-      <main className="premium-shell min-h-screen pb-32">
+      <main className="premium-shell min-h-screen pb-24 sm:pb-28">
         <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
           <header className="sticky top-3 z-20 rounded-lg border border-zinc-200 bg-white/94 px-3 py-3 shadow-sm backdrop-blur-xl">
             <div className="flex flex-col gap-4">

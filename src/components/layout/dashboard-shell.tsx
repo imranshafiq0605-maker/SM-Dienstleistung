@@ -49,7 +49,7 @@ export function DashboardShell({
         : [];
 
   return (
-    <main className="premium-shell pb-32 text-zinc-950">
+    <main className="premium-shell pb-24 text-zinc-950 sm:pb-28">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
         <header className="liquid-glass rounded-lg p-5 sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">

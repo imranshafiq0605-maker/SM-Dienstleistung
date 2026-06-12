@@ -10,7 +10,7 @@ export type PillNavItem = {
 };
 
 function NavIcon({ icon }: { icon: PillNavItem["icon"] }) {
-  const common = "h-7 w-7";
+  const common = "h-5 w-5 sm:h-6 sm:w-6";
 
   if (icon === "menu") {
     return (
@@ -87,9 +87,9 @@ export function PillBottomNav({ items }: { items: PillNavItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-3 z-50 flex justify-center px-3">
-      <div className="max-w-[calc(100vw-24px)] overflow-x-auto rounded-[2rem] border border-white/15 bg-zinc-950/88 p-2 shadow-[0_22px_70px_rgb(0_0_0/0.42)] backdrop-blur-2xl">
-        <div className="flex min-w-max items-center gap-2">
+    <nav className="fixed inset-x-0 bottom-2 z-50 flex justify-center px-2 sm:bottom-3 sm:px-3">
+      <div className="max-w-[calc(100vw-16px)] overflow-x-auto rounded-[1.65rem] border border-white/20 bg-zinc-950/62 p-1.5 shadow-[0_16px_50px_rgb(0_0_0/0.32)] backdrop-blur-[28px] sm:max-w-[calc(100vw-24px)] sm:rounded-[1.9rem] sm:p-2">
+        <div className="flex min-w-max items-center gap-1.5 sm:gap-2">
           {items.map((item) => {
             const active =
               pathname === item.href ||
@@ -97,16 +97,16 @@ export function PillBottomNav({ items }: { items: PillNavItem[] }) {
 
             return (
               <Link
-                className={`flex h-20 shrink-0 flex-col items-center justify-center rounded-[1.7rem] px-5 text-sm font-semibold transition ${
+                className={`flex h-14 shrink-0 flex-col items-center justify-center rounded-[1.35rem] px-3 text-[10px] font-semibold transition sm:h-16 sm:rounded-[1.55rem] sm:px-4 sm:text-xs ${
                   active
-                    ? "min-w-32 bg-white/14 text-cyan-200 shadow-[inset_0_1px_0_rgb(255_255_255/0.14)]"
-                    : "min-w-24 text-white/88 hover:bg-white/8"
+                    ? "min-w-20 bg-white/18 text-cyan-100 shadow-[inset_0_1px_0_rgb(255_255_255/0.22)] sm:min-w-28"
+                    : "min-w-16 text-white/86 hover:bg-white/10 sm:min-w-20"
                 }`}
                 href={item.href}
                 key={item.href}
               >
                 <NavIcon icon={item.icon} />
-                <span className="mt-1.5 whitespace-nowrap">{item.label}</span>
+                <span className="mt-1 whitespace-nowrap leading-none">{item.label}</span>
               </Link>
             );
           })}
