@@ -1,11 +1,11 @@
 "use client";
 
 import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { ProtectedPage } from "@/components/auth/protected-page";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import { uploadProfileFile } from "@/lib/storage-upload";
 import type { CompanyProfile } from "@/types/creatorflow";
@@ -60,10 +60,6 @@ export default function CompanyProfilePage() {
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
-  }
-
-  function handleLogo(event: ChangeEvent<HTMLInputElement>) {
-    setLogo(event.target.files?.[0] ?? null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -144,10 +140,13 @@ export default function CompanyProfilePage() {
             onChange={(e) => updateField("socialLinks", e.target.value)}
           />
 
-          <label className="grid gap-2 text-sm font-medium text-zinc-700">
-            Logo
-            <input accept="image/*" onChange={handleLogo} type="file" />
-          </label>
+          <FileUploadField
+            accept="image/*"
+            files={logo}
+            label="Logo"
+            multiple={false}
+            onChange={(selectedFiles) => setLogo(selectedFiles?.[0] ?? null)}
+          />
           {currentLogoUrl ? (
             <a className="text-sm font-medium text-zinc-700 underline" href={currentLogoUrl} rel="noreferrer" target="_blank">
               Aktuelles Logo ansehen

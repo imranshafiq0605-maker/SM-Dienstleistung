@@ -4,9 +4,9 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { auth, db, storage } from "@/lib/firebase";
 
 export default function CompanyRegisterPage() {
@@ -29,10 +29,6 @@ export default function CompanyRegisterPage() {
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
-  }
-
-  function handleFile(event: ChangeEvent<HTMLInputElement>) {
-    setLogo(event.target.files?.[0] ?? null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -94,7 +90,7 @@ export default function CompanyRegisterPage() {
 
       router.replace("/company/dashboard");
     } catch {
-      setError("Registrierung fehlgeschlagen. Bitte pruefe deine Angaben.");
+      setError("Registrierung fehlgeschlagen. Bitte prüfe deine Angaben.");
     } finally {
       setSubmitting(false);
     }
@@ -134,10 +130,13 @@ export default function CompanyRegisterPage() {
           onChange={(e) => updateField("description", e.target.value)}
         />
 
-        <label className="grid gap-2 text-sm font-semibold text-zinc-700">
-          Logo
-          <input accept="image/*" onChange={handleFile} type="file" />
-        </label>
+        <FileUploadField
+          accept="image/*"
+          files={logo}
+          label="Logo"
+          multiple={false}
+          onChange={(selectedFiles) => setLogo(selectedFiles?.[0] ?? null)}
+        />
 
         {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
 

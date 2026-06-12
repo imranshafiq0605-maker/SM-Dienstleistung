@@ -10,11 +10,11 @@ import {
   serverTimestamp,
   where,
 } from "firebase/firestore";
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ProtectedPage } from "@/components/auth/protected-page";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import { uploadProfileFiles } from "@/lib/storage-upload";
 import type { Campaign, CreatorProfile } from "@/types/creatorflow";
@@ -141,10 +141,6 @@ export default function CreatorCampaignsPage() {
     setApplicationForm((current) => ({ ...current, [field]: value }));
   }
 
-  function handleFiles(event: ChangeEvent<HTMLInputElement>) {
-    setApplicationFiles(event.target.files);
-  }
-
   async function submitApplication(
     campaign: Campaign,
     event: FormEvent<HTMLFormElement>,
@@ -257,15 +253,12 @@ export default function CreatorCampaignsPage() {
                   <h4 className="font-semibold">Bewerbung senden</h4>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <TextField label="Wunschgage" inputMode="decimal" value={applicationForm.desiredFee} onChange={(e) => updateApplicationField("desiredFee", e.target.value)} />
-                    <TextField label="Veroeffentlichungsdatum" type="date" value={applicationForm.publishDate} onChange={(e) => updateApplicationField("publishDate", e.target.value)} />
+                    <TextField label="Veröffentlichungsdatum" type="date" value={applicationForm.publishDate} onChange={(e) => updateApplicationField("publishDate", e.target.value)} />
                   </div>
                   <TextAreaField label="Nachricht" value={applicationForm.message} onChange={(e) => updateApplicationField("message", e.target.value)} />
                   <TextAreaField label="Warum passt du?" value={applicationForm.fitReason} onChange={(e) => updateApplicationField("fitReason", e.target.value)} />
                   <TextAreaField label="Videoidee" value={applicationForm.videoIdea} onChange={(e) => updateApplicationField("videoIdea", e.target.value)} />
-                  <label className="grid gap-2 text-sm font-medium text-zinc-700">
-                    Dateien
-                    <input multiple onChange={handleFiles} type="file" />
-                  </label>
+                  <FileUploadField files={applicationFiles} label="Dateien" onChange={setApplicationFiles} />
                   <button className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white disabled:bg-zinc-400" disabled={submittingId === campaign.id} type="submit">
                     {submittingId === campaign.id ? "Sendet..." : "Bewerbung absenden"}
                   </button>

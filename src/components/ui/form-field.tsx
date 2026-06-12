@@ -1,4 +1,5 @@
 import type {
+  ChangeEvent,
   InputHTMLAttributes,
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
@@ -48,6 +49,45 @@ export function SelectField({
       >
         {children}
       </select>
+    </label>
+  );
+}
+
+export function FileUploadField({
+  accept,
+  files,
+  label,
+  multiple = true,
+  onChange,
+}: {
+  accept?: string;
+  files?: File | FileList | null;
+  label: string;
+  multiple?: boolean;
+  onChange: (files: FileList | null) => void;
+}) {
+  const fileCount = !files ? 0 : "length" in files ? files.length : 1;
+
+  return (
+    <label className="grid gap-2 text-sm font-semibold text-zinc-700">
+      <span>{label}</span>
+      <span className="flex flex-col gap-3 rounded-lg border border-dashed border-zinc-300 bg-white/90 p-4 shadow-[0_1px_2px_rgb(20_20_17/0.04)] sm:flex-row sm:items-center sm:justify-between">
+        <span className="text-sm font-medium text-zinc-500">
+          {fileCount
+            ? `${fileCount} Datei${fileCount === 1 ? "" : "en"} ausgewählt`
+            : "Noch keine Datei ausgewählt"}
+        </span>
+        <span className="premium-button-secondary w-fit cursor-pointer rounded-lg px-4 py-2.5 text-sm font-black">
+          Dateien auswählen
+        </span>
+      </span>
+      <input
+        accept={accept}
+        className="sr-only"
+        multiple={multiple}
+        onChange={(event: ChangeEvent<HTMLInputElement>) => onChange(event.target.files)}
+        type="file"
+      />
     </label>
   );
 }

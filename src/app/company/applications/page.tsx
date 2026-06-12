@@ -146,7 +146,7 @@ export default function CompanyApplicationsPage() {
             Kampagnenbewerbungen
           </p>
           <h2 className="mt-2 text-2xl font-semibold">
-            {loading ? "Laedt..." : `${applications.length} Bewerbungen`}
+            {loading ? "Lädt..." : `${applications.length} Bewerbungen`}
           </h2>
         </section>
 
@@ -174,7 +174,7 @@ export default function CompanyApplicationsPage() {
                 <div><dt className="text-zinc-500">Nachricht</dt><dd>{application.message || "-"}</dd></div>
                 <div><dt className="text-zinc-500">Warum passend?</dt><dd>{application.fitReason || "-"}</dd></div>
                 <div><dt className="text-zinc-500">Videoidee</dt><dd>{application.videoIdea || "-"}</dd></div>
-                <div><dt className="text-zinc-500">Veroeffentlichung</dt><dd>{application.publishDate || "-"}</dd></div>
+                <div><dt className="text-zinc-500">Veröffentlichung</dt><dd>{application.publishDate || "-"}</dd></div>
               </dl>
 
               {application.files?.length ? (

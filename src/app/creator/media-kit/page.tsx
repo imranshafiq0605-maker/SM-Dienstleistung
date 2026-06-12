@@ -1,10 +1,11 @@
 "use client";
 
 import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { ProtectedPage } from "@/components/auth/protected-page";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { FileUploadField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import { uploadProfileFiles } from "@/lib/storage-upload";
 import type { CreatorProfile, UploadedAsset } from "@/types/creatorflow";
@@ -48,13 +49,6 @@ export default function CreatorMediaKitPage() {
       });
     });
   }, [appUser]);
-
-  function selectFiles(group: AssetGroup, event: ChangeEvent<HTMLInputElement>) {
-    setSelectedFiles((current) => ({
-      ...current,
-      [group]: event.target.files,
-    }));
-  }
 
   async function uploadGroup(group: AssetGroup, event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -111,17 +105,22 @@ export default function CreatorMediaKitPage() {
               </div>
 
               <form className="grid gap-3" onSubmit={(event) => void uploadGroup(group, event)}>
-                <input
-                  multiple
-                  onChange={(event) => selectFiles(group, event)}
-                  type="file"
+                <FileUploadField
+                  files={selectedFiles[group]}
+                  label={`${groupLabels[group]} auswählen`}
+                  onChange={(files) =>
+                    setSelectedFiles((current) => ({
+                      ...current,
+                      [group]: files,
+                    }))
+                  }
                 />
                 <button
                   className="w-fit rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white disabled:bg-zinc-400"
                   disabled={savingGroup === group}
                   type="submit"
                 >
-                  {savingGroup === group ? "Laedt hoch..." : `${groupLabels[group]} hochladen`}
+                  {savingGroup === group ? "Lädt hoch..." : `${groupLabels[group]} hochladen`}
                 </button>
               </form>
 

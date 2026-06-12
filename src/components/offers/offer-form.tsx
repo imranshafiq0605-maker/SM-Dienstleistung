@@ -4,7 +4,7 @@ import { addDoc, collection, doc, serverTimestamp, setDoc } from "firebase/fires
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
-import { SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import { campaignFormats, socialPlatforms } from "@/lib/profile-options";
 import { uploadProfileFiles } from "@/lib/storage-upload";
@@ -171,10 +171,7 @@ export function OfferForm({ direction }: { direction: OfferDirection }) {
       <TextAreaField label="Stornierungsregeln" value={form.cancellationRules} onChange={(e) => updateField("cancellationRules", e.target.value)} />
       <TextAreaField label="Nachricht" value={form.message} onChange={(e) => updateField("message", e.target.value)} />
 
-      <label className="grid gap-2 text-sm font-medium text-zinc-700">
-        Dateien
-        <input multiple onChange={(e) => setFiles(e.target.files)} type="file" />
-      </label>
+      <FileUploadField files={files} label="Dateien" onChange={setFiles} />
 
       {message ? (
         <p className={`rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 ${sent ? "bounce-soft" : ""}`}>

@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ProtectedPage } from "@/components/auth/protected-page";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import { campaignFormats, campaignGoals, creatorCategories, socialPlatforms } from "@/lib/profile-options";
 import { uploadProfileFiles } from "@/lib/storage-upload";
@@ -179,21 +179,21 @@ export default function NewCampaignPage() {
               <option value="yes">Ja</option>
             </SelectField>
             <SelectField label="Format" value={form.format} onChange={(e) => updateField("format", e.target.value)}>
-              <option value="">Bitte waehlen</option>
+              <option value="">Bitte wählen</option>
               {campaignFormats.map((format) => <option key={format} value={format}>{format}</option>)}
             </SelectField>
             <SelectField label="Ziel" value={form.goal} onChange={(e) => updateField("goal", e.target.value)}>
-              <option value="">Bitte waehlen</option>
+              <option value="">Bitte wählen</option>
               {campaignGoals.map((goal) => <option key={goal} value={goal}>{goal}</option>)}
             </SelectField>
             <SelectField label="Kategorie" value={form.category} onChange={(e) => updateField("category", e.target.value)}>
-              <option value="">Bitte waehlen</option>
+              <option value="">Bitte wählen</option>
               {creatorCategories.map((category) => <option key={category} value={category}>{category}</option>)}
             </SelectField>
-            <TextField label="Benoetigte Creator Anzahl" inputMode="numeric" value={form.creatorCount} onChange={(e) => updateField("creatorCount", e.target.value)} />
+            <TextField label="Benötigte Creator Anzahl" inputMode="numeric" value={form.creatorCount} onChange={(e) => updateField("creatorCount", e.target.value)} />
             <TextField label="Bewerbungsfrist" type="date" value={form.applicationDeadline} onChange={(e) => updateField("applicationDeadline", e.target.value)} />
             <TextField label="Content Deadline" type="date" value={form.contentDeadline} onChange={(e) => updateField("contentDeadline", e.target.value)} />
-            <TextField label="Veroeffentlichungsdatum" type="date" value={form.publishDate} onChange={(e) => updateField("publishDate", e.target.value)} />
+            <TextField label="Veröffentlichungsdatum" type="date" value={form.publishDate} onChange={(e) => updateField("publishDate", e.target.value)} />
             <TextField label="Rabattcode" value={form.discountCode} onChange={(e) => updateField("discountCode", e.target.value)} />
             <SelectField label="Status" value={form.status} onChange={(e) => updateField("status", e.target.value)}>
               <option value="draft">Entwurf</option>
@@ -226,7 +226,7 @@ export default function NewCampaignPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <SelectField label="Ad-Nutzung" value={form.adUsage} onChange={(e) => updateField("adUsage", e.target.value)}><option value="no">Nein</option><option value="yes">Ja</option></SelectField>
             <SelectField label="Whitelisting" value={form.whitelisting} onChange={(e) => updateField("whitelisting", e.target.value)}><option value="no">Nein</option><option value="yes">Ja</option></SelectField>
-            <SelectField label="Exklusivitaet" value={form.exclusivity} onChange={(e) => updateField("exclusivity", e.target.value)}><option value="no">Nein</option><option value="yes">Ja</option></SelectField>
+            <SelectField label="Exklusivität" value={form.exclusivity} onChange={(e) => updateField("exclusivity", e.target.value)}><option value="no">Nein</option><option value="yes">Ja</option></SelectField>
             <SelectField label="Produktversand" value={form.productShipping} onChange={(e) => updateField("productShipping", e.target.value)}><option value="no">Nein</option><option value="yes">Ja</option></SelectField>
           </div>
 
@@ -240,7 +240,7 @@ export default function NewCampaignPage() {
               <TextField label="Engagement Minimum" inputMode="decimal" value={form.matchEngagementMin} onChange={(e) => updateField("matchEngagementMin", e.target.value)} />
               <SelectField label="Geschlecht" value={form.matchGender} onChange={(e) => updateField("matchGender", e.target.value)}>
                 <option value="">Egal</option>
-                <option value="male">Maennlich</option>
+                <option value="male">Männlich</option>
                 <option value="female">Weiblich</option>
                 <option value="diverse">Divers</option>
                 <option value="not_specified">Keine Angabe</option>
@@ -248,8 +248,8 @@ export default function NewCampaignPage() {
             </div>
           </section>
 
-          <label className="grid gap-2 text-sm font-medium text-zinc-700">Produktbilder<input accept="image/*" multiple onChange={(e) => setProductImages(e.target.files)} type="file" /></label>
-          <label className="grid gap-2 text-sm font-medium text-zinc-700">Dateien<input multiple onChange={(e) => setFiles(e.target.files)} type="file" /></label>
+          <FileUploadField accept="image/*" files={productImages} label="Produktbilder" onChange={setProductImages} />
+          <FileUploadField files={files} label="Dateien" onChange={setFiles} />
 
           {message ? <p className="text-sm font-medium text-green-700">{message}</p> : null}
           <button className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white disabled:bg-zinc-400" disabled={saving} type="submit">

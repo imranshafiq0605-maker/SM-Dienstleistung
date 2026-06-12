@@ -79,7 +79,7 @@ export default function AdminDealsPage() {
 
   return (
     <AdminShell
-      subtitle="Ueberwache Angebote, laufende Kooperationen, Content-Phasen und Zahlungsstatus."
+      subtitle="Überwache Angebote, laufende Kooperationen, Content-Phasen und Zahlungsstatus."
       title="Deals & Angebote"
     >
       <section className="grid gap-4 md:grid-cols-4">

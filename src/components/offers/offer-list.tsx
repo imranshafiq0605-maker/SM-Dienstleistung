@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   addDoc,
@@ -241,6 +241,11 @@ export function OfferList({ role }: { role: Extract<UserRole, "creator" | "compa
   }
 
   async function acceptOffer(offer: Offer) {
+    if (["accepted", "deal_created", "rejected"].includes(offer.status)) {
+      setNotice(`Dieses Angebot ist bereits ${statusLabels[offer.status].toLowerCase()}.`);
+      return;
+    }
+
     const dealRef = await addDoc(collection(db, "deals"), {
       campaignId: offer.campaignId || "",
       campaignTitle: offer.campaignTitle || "",
@@ -323,6 +328,7 @@ export function OfferList({ role }: { role: Extract<UserRole, "creator" | "compa
       (offer.status === "counter_offer"
         ? offer.counterOfferBy !== appUser.uid
         : offer.recipientId === appUser.uid);
+    const canCounter = !["accepted", "deal_created", "rejected"].includes(offer.status);
 
     return (
       <article className="premium-card rounded-lg p-5">
@@ -361,17 +367,23 @@ export function OfferList({ role }: { role: Extract<UserRole, "creator" | "compa
           ) : null}
         </div>
 
-        <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={(event) => void sendCounterOffer(offer, event)}>
-          <TextField
-            label="Gegenangebot"
-            onChange={(event) => setCounterValues((current) => ({ ...current, [offer.id]: event.target.value }))}
-            placeholder="Preis in €"
-            value={counterValues[offer.id] || ""}
-          />
-          <button className="premium-button-secondary mt-auto rounded-lg px-4 py-3 text-sm font-black" type="submit">
-            Gegenangebot senden
-          </button>
-        </form>
+        {canCounter ? (
+          <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={(event) => void sendCounterOffer(offer, event)}>
+            <TextField
+              label="Gegenangebot"
+              onChange={(event) => setCounterValues((current) => ({ ...current, [offer.id]: event.target.value }))}
+              placeholder="Preis in €"
+              value={counterValues[offer.id] || ""}
+            />
+            <button className="premium-button-secondary mt-auto rounded-lg px-4 py-3 text-sm font-black" type="submit">
+              Gegenangebot senden
+            </button>
+          </form>
+        ) : (
+          <p className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm font-semibold text-zinc-600">
+            Dieses Angebot ist abgeschlossen und kann nicht erneut angenommen werden.
+          </p>
+        )}
       </article>
     );
   }
@@ -406,3 +418,4 @@ export function OfferList({ role }: { role: Extract<UserRole, "creator" | "compa
     </section>
   );
 }
+

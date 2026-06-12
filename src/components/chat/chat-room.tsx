@@ -269,6 +269,10 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
 
   async function acceptOffer() {
     if (!offer || !conversation) return;
+    if (["accepted", "deal_created", "rejected"].includes(offer.status)) {
+      setNotice("Dieses Angebot ist bereits abgeschlossen.");
+      return;
+    }
 
     const dealRef = await addDoc(collection(db, "deals"), {
       campaignId: offer.campaignId || "",
@@ -290,7 +294,7 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
     });
 
     await updateDoc(doc(db, "offers", offer.id), {
-      status: "accepted",
+      status: "deal_created",
       updatedAt: serverTimestamp(),
     });
 
@@ -305,6 +309,10 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
 
   async function counterOffer() {
     if (!offer || !conversation || !appUser || !counterPrice) return;
+    if (["accepted", "deal_created", "rejected"].includes(offer.status)) {
+      setNotice("Dieses Angebot ist bereits abgeschlossen.");
+      return;
+    }
 
     const otherUid = conversation.participants.find((id) => id !== appUser.uid);
     const message = `Gegenangebot: ${counterPrice} €`;
@@ -388,6 +396,8 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
     (offer.status === "counter_offer"
       ? offer.counterOfferBy !== appUser.uid
       : offer.recipientId === appUser.uid);
+  const canCounterOffer =
+    !!offer && !["accepted", "deal_created", "rejected"].includes(offer.status);
 
   return (
     <section className="premium-panel overflow-hidden rounded-lg">
@@ -416,12 +426,14 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
                 </button>
               </>
             ) : null}
-            <div className="flex gap-2">
-              <TextField label="Gegenangebot" onChange={(e) => setCounterPrice(e.target.value)} value={counterPrice} />
-              <button className="premium-button-secondary mt-auto rounded-lg px-4 py-2 text-sm font-black" onClick={() => void counterOffer()} type="button">
-                Senden
-              </button>
-            </div>
+            {canCounterOffer ? (
+              <div className="flex gap-2">
+                <TextField label="Gegenangebot" onChange={(e) => setCounterPrice(e.target.value)} value={counterPrice} />
+                <button className="premium-button-secondary mt-auto rounded-lg px-4 py-2 text-sm font-black" onClick={() => void counterOffer()} type="button">
+                  Senden
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}

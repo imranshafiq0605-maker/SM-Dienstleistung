@@ -10,12 +10,12 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
-import { SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import { uploadProfileFiles } from "@/lib/storage-upload";
-import type { ChatMessage, ContentSubmission, Deal, DealStatus, FirestoreDate, UserRole } from "@/types/creatorflow";
+import type { ContentSubmission, Deal, DealStatus, FirestoreDate, UserRole } from "@/types/creatorflow";
 
 function timeValue(value: FirestoreDate) {
   if (!value) return 0;
@@ -53,10 +53,7 @@ const initialReview = {
 export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<UserRole, "creator" | "company"> }) {
   const { appUser } = useAuth();
   const [deal, setDeal] = useState<Deal | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [submissions, setSubmissions] = useState<ContentSubmission[]>([]);
-  const [messageBody, setMessageBody] = useState("");
-  const [messageFiles, setMessageFiles] = useState<FileList | null>(null);
   const [contentForm, setContentForm] = useState({ caption: "", postLink: "" });
   const [contentFiles, setContentFiles] = useState<FileList | null>(null);
   const [feedback, setFeedback] = useState("");
@@ -78,20 +75,6 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
       },
     );
 
-    const unsubscribeMessages = onSnapshot(
-      query(collection(db, "messages"), where("conversationId", "==", `deal_${dealId}`)),
-      (snapshot) => {
-        setMessages(
-          snapshot.docs
-            .map((messageDoc) => ({ ...(messageDoc.data() as ChatMessage), id: messageDoc.id }))
-            .sort((a, b) => timeValue(a.createdAt) - timeValue(b.createdAt)),
-        );
-      },
-      (messageError) => {
-        setError(messageError.message || "Deal-Nachrichten konnten nicht geladen werden.");
-      },
-    );
-
     const unsubscribeSubmissions = onSnapshot(
       query(collection(db, "contentSubmissions"), where("dealId", "==", dealId)),
       (snapshot) => {
@@ -108,44 +91,9 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
 
     return () => {
       unsubscribeDeal();
-      unsubscribeMessages();
       unsubscribeSubmissions();
     };
   }, [dealId]);
-
-  async function sendMessage(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!appUser || !messageBody.trim()) return;
-
-    const attachments = await uploadProfileFiles(messageFiles, `conversations/deal_${dealId}`);
-    await addDoc(collection(db, "messages"), {
-      conversationId: `deal_${dealId}`,
-      sourceType: "deal",
-      sourceId: dealId,
-      senderId: appUser.uid,
-      senderName: appUser.displayName,
-      body: messageBody,
-      attachments,
-      readBy: [appUser.uid],
-      createdAt: serverTimestamp(),
-    });
-    setMessageBody("");
-    setMessageFiles(null);
-  }
-
-  async function markMessagesRead() {
-    if (!appUser) return;
-
-    await Promise.all(
-      messages
-        .filter((message) => !message.readBy?.includes(appUser.uid))
-        .map((message) =>
-          updateDoc(doc(db, "messages", message.id), {
-            readBy: [...(message.readBy ?? []), appUser.uid],
-          }),
-        ),
-    );
-  }
 
   async function submitContent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -273,41 +221,12 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
       </section>
 
       <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold">Chat</h2>
-          <button className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold" onClick={() => void markMessagesRead()} type="button">
-            Als gelesen markieren
-          </button>
-        </div>
-        <div className="grid max-h-96 gap-3 overflow-y-auto rounded-lg bg-zinc-50 p-3">
-          {messages.map((message) => (
-            <article className="rounded-lg border border-zinc-200 bg-white p-3" key={message.id}>
-              <p className="text-sm font-semibold">{message.senderName}</p>
-              <p className="mt-1 text-sm text-zinc-700">{message.body}</p>
-              <p className="mt-2 text-xs text-zinc-500">Gelesen von {message.readBy?.length ?? 0} Nutzer(n)</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {message.attachments?.map((file) => (
-                  <a className="text-xs font-medium underline" href={file.url} key={file.path} rel="noreferrer" target="_blank">{file.name}</a>
-                ))}
-              </div>
-            </article>
-          ))}
-          {messages.length === 0 ? <p className="text-sm text-zinc-500">Noch keine Nachrichten.</p> : null}
-        </div>
-        <form className="grid gap-3" onSubmit={(event) => void sendMessage(event)}>
-          <TextAreaField label="Nachricht" value={messageBody} onChange={(event) => setMessageBody(event.target.value)} />
-          <input multiple onChange={(event: ChangeEvent<HTMLInputElement>) => setMessageFiles(event.target.files)} type="file" />
-          <button className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white" type="submit">Nachricht senden</button>
-        </form>
-      </section>
-
-      <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
         <h2 className="text-2xl font-semibold">Content Workflow</h2>
         {role === "creator" ? (
           <form className="grid gap-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4" onSubmit={(event) => void submitContent(event)}>
             <TextAreaField label="Caption" value={contentForm.caption} onChange={(event) => setContentForm((current) => ({ ...current, caption: event.target.value }))} />
             <TextField label="Post-Link" value={contentForm.postLink} onChange={(event) => setContentForm((current) => ({ ...current, postLink: event.target.value }))} />
-            <label className="grid gap-2 text-sm font-medium text-zinc-700">Video, Bild oder Dateien<input multiple onChange={(event) => setContentFiles(event.target.files)} type="file" /></label>
+            <FileUploadField files={contentFiles} label="Video, Bild oder Dateien" onChange={setContentFiles} />
             <button className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white" type="submit">Content hochladen</button>
           </form>
         ) : null}

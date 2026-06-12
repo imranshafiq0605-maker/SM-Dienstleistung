@@ -348,10 +348,10 @@ export default function AdminDashboardPage() {
         </AdminSection>
       </div>
 
-      <AdminSection eyebrow="Ueberwachung" title="Aktuelle Deals">
+      <AdminSection eyebrow="Überwachung" title="Aktuelle Deals">
         {deals.length === 0 ? (
           <EmptyState
-            text="Wenn ein Angebot oder eine Bewerbung zu einem Deal wird, erscheint die Kooperation in dieser Uebersicht."
+            text="Wenn ein Angebot oder eine Bewerbung zu einem Deal wird, erscheint die Kooperation in dieser Übersicht."
             title="Noch keine Deals vorhanden"
           />
         ) : (

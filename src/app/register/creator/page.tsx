@@ -1,12 +1,12 @@
-"use client";
+﻿"use client";
 
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { auth, db, storage } from "@/lib/firebase";
 import { creatorCategories } from "@/lib/profile-options";
 
@@ -38,10 +38,6 @@ export default function CreatorRegisterPage() {
         ? current.filter((item) => item !== category)
         : [...current, category],
     );
-  }
-
-  function handleFile(event: ChangeEvent<HTMLInputElement>) {
-    setProfileImage(event.target.files?.[0] ?? null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -117,7 +113,7 @@ export default function CreatorRegisterPage() {
 
       router.replace("/creator/dashboard");
     } catch {
-      setError("Registrierung fehlgeschlagen. Bitte pruefe deine Angaben.");
+      setError("Registrierung fehlgeschlagen. Bitte prüfe deine Angaben.");
     } finally {
       setSubmitting(false);
     }
@@ -176,10 +172,13 @@ export default function CreatorRegisterPage() {
           </div>
         </fieldset>
 
-        <label className="grid gap-2 text-sm font-semibold text-zinc-700">
-          Profilbild
-          <input accept="image/*" onChange={handleFile} type="file" />
-        </label>
+        <FileUploadField
+          accept="image/*"
+          files={profileImage}
+          label="Profilbild"
+          multiple={false}
+          onChange={(selectedFiles) => setProfileImage(selectedFiles?.[0] ?? null)}
+        />
 
         {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
 
@@ -194,3 +193,4 @@ export default function CreatorRegisterPage() {
     </main>
   );
 }
+

@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { ProtectedPage } from "@/components/auth/protected-page";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import { creatorCategories } from "@/lib/profile-options";
 import { uploadProfileFile } from "@/lib/storage-upload";
@@ -93,10 +93,6 @@ export default function CreatorProfilePage() {
     );
   }
 
-  function handleImage(event: ChangeEvent<HTMLInputElement>) {
-    setProfileImage(event.target.files?.[0] ?? null);
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!appUser) return;
@@ -157,7 +153,7 @@ export default function CreatorProfilePage() {
             <TextField label="Geburtsdatum" type="date" value={form.birthDate} onChange={(e) => updateField("birthDate", e.target.value)} />
             <SelectField label="Geschlecht" value={form.gender} onChange={(e) => updateField("gender", e.target.value)}>
               <option value="not_specified">Keine Angabe</option>
-              <option value="male">Maennlich</option>
+              <option value="male">Männlich</option>
               <option value="female">Weiblich</option>
               <option value="diverse">Divers</option>
             </SelectField>
@@ -168,7 +164,7 @@ export default function CreatorProfilePage() {
 
           <TextAreaField label="Bio" value={form.bio} onChange={(e) => updateField("bio", e.target.value)} />
           <TextAreaField label="Zielgruppe" value={form.audience} onChange={(e) => updateField("audience", e.target.value)} />
-          <TextField label="Verfuegbarkeit" value={form.availability} onChange={(e) => updateField("availability", e.target.value)} />
+          <TextField label="Verfügbarkeit" value={form.availability} onChange={(e) => updateField("availability", e.target.value)} />
 
           <fieldset className="grid gap-3">
             <legend className="text-sm font-medium text-zinc-700">Kategorien</legend>
@@ -197,13 +193,16 @@ export default function CreatorProfilePage() {
             <TextField label="Preis pro TikTok" inputMode="decimal" value={form.priceTikTok} onChange={(e) => updateField("priceTikTok", e.target.value)} />
             <TextField label="Preis pro YouTube Short" inputMode="decimal" value={form.priceYouTubeShort} onChange={(e) => updateField("priceYouTubeShort", e.target.value)} />
             <TextField label="Preis pro YouTube Video" inputMode="decimal" value={form.priceYouTubeVideo} onChange={(e) => updateField("priceYouTubeVideo", e.target.value)} />
-            <TextField label="Preis fuer UGC Video" inputMode="decimal" value={form.priceUgcVideo} onChange={(e) => updateField("priceUgcVideo", e.target.value)} />
+            <TextField label="Preis für UGC Video" inputMode="decimal" value={form.priceUgcVideo} onChange={(e) => updateField("priceUgcVideo", e.target.value)} />
           </div>
 
-          <label className="grid gap-2 text-sm font-medium text-zinc-700">
-            Profilbild
-            <input accept="image/*" onChange={handleImage} type="file" />
-          </label>
+          <FileUploadField
+            accept="image/*"
+            files={profileImage}
+            label="Profilbild"
+            multiple={false}
+            onChange={(selectedFiles) => setProfileImage(selectedFiles?.[0] ?? null)}
+          />
           {currentImageUrl ? (
             <a className="text-sm font-medium text-zinc-700 underline" href={currentImageUrl} target="_blank">
               Aktuelles Profilbild ansehen
@@ -219,3 +218,4 @@ export default function CreatorProfilePage() {
     </ProtectedPage>
   );
 }
+
