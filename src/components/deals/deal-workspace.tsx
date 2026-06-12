@@ -23,6 +23,14 @@ function timeValue(value: FirestoreDate) {
   return value.getTime();
 }
 
+function isImage(fileName: string) {
+  return /\.(avif|gif|jpe?g|png|webp)$/i.test(fileName);
+}
+
+function isVideo(fileName: string) {
+  return /\.(mov|mp4|mpeg|mpg|webm)$/i.test(fileName);
+}
+
 const dealStatusOptions: { value: DealStatus; label: string }[] = [
   { value: "contract_open", label: "Vertrag offen" },
   { value: "payment_open", label: "Zahlung offen" },
@@ -59,8 +67,10 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
   const [feedback, setFeedback] = useState("");
   const [review, setReview] = useState(initialReview);
   const [notice, setNotice] = useState("");
+  const [uploadingContent, setUploadingContent] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [contentError, setContentError] = useState("");
 
   useEffect(() => {
     const unsubscribeDeal = onSnapshot(
@@ -99,25 +109,49 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
     event.preventDefault();
     if (!appUser || !deal) return;
 
-    const files = await uploadProfileFiles(contentFiles, `deals/${dealId}/content`);
-    await addDoc(collection(db, "contentSubmissions"), {
-      dealId,
-      creatorId: deal.creatorId,
-      companyId: deal.companyId,
-      caption: contentForm.caption,
-      postLink: contentForm.postLink,
-      files,
-      status: "uploaded",
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    await updateDoc(doc(db, "deals", dealId), {
-      status: "content_uploaded",
-      updatedAt: serverTimestamp(),
-    });
-    setContentForm({ caption: "", postLink: "" });
-    setContentFiles(null);
-    setNotice("Content wurde hochgeladen.");
+    if (appUser.uid !== deal.creatorId) {
+      setContentError("Nur der Creator dieses Deals kann Content hochladen.");
+      return;
+    }
+
+    if (!contentFiles?.length && !contentForm.caption.trim() && !contentForm.postLink.trim()) {
+      setContentError("Bitte lade mindestens eine Datei hoch oder ergänze Caption/Post-Link.");
+      return;
+    }
+
+    setUploadingContent(true);
+    setContentError("");
+    setNotice("");
+
+    try {
+      const files = await uploadProfileFiles(contentFiles, `deals/${dealId}/content`);
+      await addDoc(collection(db, "contentSubmissions"), {
+        dealId,
+        creatorId: deal.creatorId,
+        companyId: deal.companyId,
+        caption: contentForm.caption,
+        postLink: contentForm.postLink,
+        files,
+        status: "uploaded",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      await updateDoc(doc(db, "deals", dealId), {
+        status: "content_uploaded",
+        updatedAt: serverTimestamp(),
+      });
+      setContentForm({ caption: "", postLink: "" });
+      setContentFiles(null);
+      setNotice("Content wurde hochgeladen.");
+    } catch (uploadError) {
+      setContentError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Content konnte nicht hochgeladen werden.",
+      );
+    } finally {
+      setUploadingContent(false);
+    }
   }
 
   async function updateSubmission(submission: ContentSubmission, status: ContentSubmission["status"]) {
@@ -226,20 +260,47 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
           <form className="grid gap-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4" onSubmit={(event) => void submitContent(event)}>
             <TextAreaField label="Caption" value={contentForm.caption} onChange={(event) => setContentForm((current) => ({ ...current, caption: event.target.value }))} />
             <TextField label="Post-Link" value={contentForm.postLink} onChange={(event) => setContentForm((current) => ({ ...current, postLink: event.target.value }))} />
-            <FileUploadField files={contentFiles} label="Video, Bild oder Dateien" onChange={setContentFiles} />
-            <button className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white" type="submit">Content hochladen</button>
+            <FileUploadField accept="image/*,video/*" files={contentFiles} label="Mehrere Bilder oder Videos" onChange={setContentFiles} />
+            {contentError ? (
+              <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
+                {contentError}
+              </p>
+            ) : null}
+            <button className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white disabled:bg-zinc-400" disabled={uploadingContent} type="submit">
+              {uploadingContent ? "Content wird hochgeladen..." : "Content hochladen"}
+            </button>
           </form>
         ) : null}
 
         <div className="grid gap-3">
+          {submissions.length === 0 ? (
+            <p className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-500">
+              Noch kein Content hochgeladen.
+            </p>
+          ) : null}
           {submissions.map((submission) => (
             <article className="grid gap-3 rounded-lg border border-zinc-200 p-4" key={submission.id}>
               <p className="font-semibold">Status: {submission.status}</p>
               <p className="text-sm text-zinc-600">{submission.caption || "Keine Caption"}</p>
               {submission.postLink ? <a className="text-sm font-medium underline" href={submission.postLink} rel="noreferrer" target="_blank">Post-Link öffnen</a> : null}
-              <div className="flex flex-wrap gap-2">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {submission.files?.map((file) => (
-                  <a className="rounded-full border border-zinc-300 px-3 py-2 text-sm font-medium" href={file.url} key={file.path} rel="noreferrer" target="_blank">{file.name}</a>
+                  <a className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm" href={file.url} key={file.path} rel="noreferrer" target="_blank">
+                    {isImage(file.name) ? (
+                      <img alt={file.name} className="aspect-video w-full object-cover" src={file.url} />
+                    ) : null}
+                    {isVideo(file.name) ? (
+                      <video className="aspect-video w-full object-cover" controls preload="metadata" src={file.url} />
+                    ) : null}
+                    {!isImage(file.name) && !isVideo(file.name) ? (
+                      <div className="grid aspect-video place-items-center bg-zinc-50 px-3 text-center text-sm font-semibold text-zinc-500">
+                        Datei
+                      </div>
+                    ) : null}
+                    <span className="block truncate px-3 py-2 text-sm font-semibold text-zinc-700">
+                      {file.name}
+                    </span>
+                  </a>
                 ))}
               </div>
               {submission.feedback ? <p className="text-sm text-zinc-600">Feedback: {submission.feedback}</p> : null}
