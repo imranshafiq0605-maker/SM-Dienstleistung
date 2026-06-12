@@ -5,7 +5,16 @@ import { usePathname } from "next/navigation";
 
 export type PillNavItem = {
   href: string;
-  icon: "menu" | "bars" | "network" | "ticket" | "wallet" | "user" | "briefcase" | "chat";
+  icon:
+    | "menu"
+    | "bars"
+    | "network"
+    | "ticket"
+    | "wallet"
+    | "user"
+    | "briefcase"
+    | "chat"
+    | "logout";
   label: string;
 };
 
@@ -75,6 +84,15 @@ function NavIcon({ icon }: { icon: PillNavItem["icon"] }) {
     );
   }
 
+  if (icon === "logout") {
+    return (
+      <svg className={common} fill="none" viewBox="0 0 24 24">
+        <path d="M10 6H6.5A2.5 2.5 0 0 0 4 8.5v7A2.5 2.5 0 0 0 6.5 18H10" stroke="currentColor" strokeLinecap="round" strokeWidth="2.2" />
+        <path d="M14 8l4 4-4 4M8 12h10" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" />
+      </svg>
+    );
+  }
+
   return (
     <svg className={common} fill="none" viewBox="0 0 24 24">
       <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="2.2" />
@@ -83,7 +101,13 @@ function NavIcon({ icon }: { icon: PillNavItem["icon"] }) {
   );
 }
 
-export function PillBottomNav({ items }: { items: PillNavItem[] }) {
+export function PillBottomNav({
+  items,
+  onSignOut,
+}: {
+  items: PillNavItem[];
+  onSignOut?: () => void;
+}) {
   const pathname = usePathname();
 
   return (
@@ -110,6 +134,16 @@ export function PillBottomNav({ items }: { items: PillNavItem[] }) {
               </Link>
             );
           })}
+          {onSignOut ? (
+            <button
+              className="flex h-14 min-w-16 shrink-0 flex-col items-center justify-center rounded-[1.35rem] px-3 text-[10px] font-semibold text-white/86 transition hover:bg-red-500/18 hover:text-red-100 sm:h-16 sm:min-w-20 sm:rounded-[1.55rem] sm:px-4 sm:text-xs"
+              onClick={onSignOut}
+              type="button"
+            >
+              <NavIcon icon="logout" />
+              <span className="mt-1 whitespace-nowrap leading-none">Logout</span>
+            </button>
+          ) : null}
         </div>
       </div>
     </nav>

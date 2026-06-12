@@ -96,7 +96,9 @@ export function DashboardShell({
         <div className="contents">{children}</div>
       </div>
 
-      {navItems.length ? <PillBottomNav items={navItems} /> : null}
+      {navItems.length ? (
+        <PillBottomNav items={navItems} onSignOut={() => void signOut()} />
+      ) : null}
     </main>
   );
 }

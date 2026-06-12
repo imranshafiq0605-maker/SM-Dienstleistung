@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useAuth } from "@/components/auth/auth-provider";
 import { ProtectedPage } from "@/components/auth/protected-page";
 import { PillBottomNav, type PillNavItem } from "@/components/layout/pill-bottom-nav";
 
@@ -24,6 +25,8 @@ export function AdminShell({
   subtitle: string;
   children: ReactNode;
 }) {
+  const { signOut } = useAuth();
+
   return (
     <ProtectedPage role="admin">
       <main className="premium-shell min-h-screen pb-24 sm:pb-28">
@@ -75,7 +78,7 @@ export function AdminShell({
           </section>
         </div>
       </main>
-      <PillBottomNav items={adminLinks} />
+      <PillBottomNav items={adminLinks} onSignOut={() => void signOut()} />
     </ProtectedPage>
   );
 }
