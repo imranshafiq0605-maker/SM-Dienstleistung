@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "sm-dienstleistung",
   "version": "0.1.0",
   "private": true,
@@ -22,5 +23,12 @@
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
     "typescript": "^5"
+=======
+  "dependencies": {
+    "firebase": "^12.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3"
+>>>>>>> 699c56a34ef97e13ac567b11400db198b0203b18
   }
 }
