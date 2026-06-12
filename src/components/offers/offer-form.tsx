@@ -1,6 +1,7 @@
 "use client";
 
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
@@ -29,10 +30,16 @@ const initialForm = {
 
 export function OfferForm({ direction }: { direction: OfferDirection }) {
   const { appUser } = useAuth();
-  const [form, setForm] = useState(initialForm);
+  const searchParams = useSearchParams();
+  const [form, setForm] = useState(() => ({
+    ...initialForm,
+    recipientId: searchParams.get("recipientId") || "",
+    recipientName: searchParams.get("recipientName") || "",
+  }));
   const [files, setFiles] = useState<FileList | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [sent, setSent] = useState(false);
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -44,6 +51,7 @@ export function OfferForm({ direction }: { direction: OfferDirection }) {
 
     setSaving(true);
     setMessage("");
+    setSent(false);
 
     const uploadedFiles = await uploadProfileFiles(
       files,
@@ -51,7 +59,7 @@ export function OfferForm({ direction }: { direction: OfferDirection }) {
     );
     const isCompanyToCreator = direction === "company_to_creator";
 
-    await addDoc(collection(db, "offers"), {
+    const offerRef = await addDoc(collection(db, "offers"), {
       direction,
       senderId: appUser.uid,
       senderName: appUser.displayName,
@@ -78,9 +86,49 @@ export function OfferForm({ direction }: { direction: OfferDirection }) {
       updatedAt: serverTimestamp(),
     });
 
+    const conversationId = `offer_${offerRef.id}`;
+    const participantNames = {
+      [appUser.uid]: appUser.displayName,
+      [form.recipientId]: form.recipientName || "Kontakt",
+    };
+    const initialMessage =
+      form.message ||
+      `${isCompanyToCreator ? "Angebot" : "Kooperationsanfrage"}: ${form.service || "Neue Anfrage"}`;
+
+    await setDoc(doc(db, "conversations", conversationId), {
+      companyId: isCompanyToCreator ? appUser.uid : form.recipientId,
+      createdAt: serverTimestamp(),
+      creatorId: isCompanyToCreator ? form.recipientId : appUser.uid,
+      lastMessage: initialMessage,
+      lastMessageAt: serverTimestamp(),
+      participantNames,
+      participants: [appUser.uid, form.recipientId],
+      sourceId: offerRef.id,
+      sourceType: "offer",
+      title: form.service || "Direktes Angebot",
+      unreadBy: {
+        [appUser.uid]: 0,
+        [form.recipientId]: 1,
+      },
+      updatedAt: serverTimestamp(),
+    });
+
+    await addDoc(collection(db, "messages"), {
+      attachments: uploadedFiles,
+      body: initialMessage,
+      conversationId,
+      createdAt: serverTimestamp(),
+      readBy: [appUser.uid],
+      senderId: appUser.uid,
+      senderName: appUser.displayName,
+      sourceId: offerRef.id,
+      sourceType: "offer",
+    });
+
     setForm(initialForm);
     setFiles(null);
-    setMessage("Angebot wurde gesendet.");
+    setMessage("Angebot wurde gesendet und ein Chat wurde automatisch erstellt.");
+    setSent(true);
     setSaving(false);
   }
 
@@ -94,21 +142,21 @@ export function OfferForm({ direction }: { direction: OfferDirection }) {
           {direction === "company_to_creator" ? "Creator Angebot senden" : "Kooperationsanfrage senden"}
         </h2>
         <p className="mt-2 text-sm text-zinc-500">
-          Fuer dieses MVP trage die Empfaenger-ID aus Firestore ein. Spaeter wird das direkt aus Profilkarten vorausgefuellt.
+          Wähle ein Profil aus der Suche oder trage die Empfänger-Daten direkt ein.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField label="Empfaenger UID" required value={form.recipientId} onChange={(e) => updateField("recipientId", e.target.value)} />
-        <TextField label="Empfaenger Name" value={form.recipientName} onChange={(e) => updateField("recipientName", e.target.value)} />
+        <TextField label="Empfänger UID" required value={form.recipientId} onChange={(e) => updateField("recipientId", e.target.value)} />
+        <TextField label="Empfänger Name" value={form.recipientName} onChange={(e) => updateField("recipientName", e.target.value)} />
         <TextField label="Preis" inputMode="decimal" value={form.price} onChange={(e) => updateField("price", e.target.value)} />
         <TextField label="Leistung" value={form.service} onChange={(e) => updateField("service", e.target.value)} />
         <SelectField label="Plattform" value={form.platform} onChange={(e) => updateField("platform", e.target.value)}>
-          <option value="">Bitte waehlen</option>
+          <option value="">Bitte wählen</option>
           {socialPlatforms.map((platform) => <option key={platform} value={platform}>{platform}</option>)}
         </SelectField>
         <SelectField label="Format" value={form.format} onChange={(e) => updateField("format", e.target.value)}>
-          <option value="">Bitte waehlen</option>
+          <option value="">Bitte wählen</option>
           {campaignFormats.map((format) => <option key={format} value={format}>{format}</option>)}
         </SelectField>
         <TextField label="Deadline" type="date" value={form.deadline} onChange={(e) => updateField("deadline", e.target.value)} />
@@ -128,7 +176,11 @@ export function OfferForm({ direction }: { direction: OfferDirection }) {
         <input multiple onChange={(e) => setFiles(e.target.files)} type="file" />
       </label>
 
-      {message ? <p className="text-sm font-medium text-green-700">{message}</p> : null}
+      {message ? (
+        <p className={`rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 ${sent ? "bounce-soft" : ""}`}>
+          {message}
+        </p>
+      ) : null}
       <button className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white disabled:bg-zinc-400" disabled={saving} type="submit">
         {saving ? "Sendet..." : "Senden"}
       </button>

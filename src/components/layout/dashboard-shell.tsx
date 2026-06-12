@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ReactNode } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { ReactNode, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { PillBottomNav, type PillNavItem } from "@/components/layout/pill-bottom-nav";
+import { db } from "@/lib/firebase";
+import type { Conversation } from "@/types/creatorflow";
 
 const roleLabels = {
   admin: "Admin",
@@ -32,6 +35,7 @@ export function DashboardShell({
           { href: "/creator/profile", icon: "user", label: "Profil" },
           { href: "/creator/socials", icon: "network", label: "Socials" },
           { href: "/creator/campaigns", icon: "ticket", label: "Kampagnen" },
+          { href: "/creator/chats", icon: "chat", label: "Chats" },
           { href: "/creator/deals", icon: "wallet", label: "Deals" },
           { href: "/creator/company-search", icon: "briefcase", label: "Firmen" },
           { href: "/creator/media-kit", icon: "bars", label: "Media Kit" },
@@ -42,11 +46,31 @@ export function DashboardShell({
             { href: "/company/profile", icon: "briefcase", label: "Profil" },
             { href: "/company/creator-search", icon: "user", label: "Creator" },
             { href: "/company/campaigns/new", icon: "ticket", label: "Kampagne" },
+            { href: "/company/chats", icon: "chat", label: "Chats" },
             { href: "/company/deals", icon: "wallet", label: "Deals" },
             { href: "/company/applications", icon: "bars", label: "Bewerbungen" },
             { href: "/company/offers/new", icon: "chat", label: "Angebote" },
           ]
         : [];
+  const [unreadChats, setUnreadChats] = useState(0);
+
+  useEffect(() => {
+    if (!appUser || (appUser.role !== "creator" && appUser.role !== "company")) return;
+
+    getDocs(
+      query(
+        collection(db, "conversations"),
+        where("participants", "array-contains", appUser.uid),
+      ),
+    ).then((snapshot) => {
+      setUnreadChats(
+        snapshot.docs.reduce((sum, item) => {
+          const conversation = item.data() as Conversation;
+          return sum + Number(conversation.unreadBy?.[appUser.uid] || 0);
+        }, 0),
+      );
+    });
+  }, [appUser]);
 
   return (
     <main className="premium-shell pb-24 text-zinc-950 sm:pb-28">
@@ -97,7 +121,14 @@ export function DashboardShell({
       </div>
 
       {navItems.length ? (
-        <PillBottomNav items={navItems} onSignOut={() => void signOut()} />
+        <PillBottomNav
+          badgeCounts={{
+            "/company/chats": unreadChats,
+            "/creator/chats": unreadChats,
+          }}
+          items={navItems}
+          onSignOut={() => void signOut()}
+        />
       ) : null}
     </main>
   );

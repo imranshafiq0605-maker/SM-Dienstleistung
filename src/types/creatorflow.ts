@@ -271,6 +271,22 @@ export interface ChatMessage {
   createdAt: FirestoreDate;
 }
 
+export interface Conversation {
+  id: string;
+  sourceType: "deal" | "offer";
+  sourceId: string;
+  participants: string[];
+  participantNames: Record<string, string>;
+  creatorId: string;
+  companyId: string;
+  title: string;
+  lastMessage: string;
+  lastMessageAt: FirestoreDate;
+  unreadBy: Record<string, number>;
+  createdAt: FirestoreDate;
+  updatedAt?: FirestoreDate;
+}
+
 export interface ContentSubmission {
   id: string;
   dealId: string;

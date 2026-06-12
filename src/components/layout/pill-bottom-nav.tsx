@@ -102,9 +102,11 @@ function NavIcon({ icon }: { icon: PillNavItem["icon"] }) {
 }
 
 export function PillBottomNav({
+  badgeCounts,
   items,
   onSignOut,
 }: {
+  badgeCounts?: Record<string, number>;
   items: PillNavItem[];
   onSignOut?: () => void;
 }) {
@@ -129,7 +131,14 @@ export function PillBottomNav({
                 href={item.href}
                 key={item.href}
               >
-                <NavIcon icon={item.icon} />
+                <span className="relative">
+                  <NavIcon icon={item.icon} />
+                  {badgeCounts?.[item.href] ? (
+                    <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
+                      {badgeCounts[item.href]}
+                    </span>
+                  ) : null}
+                </span>
                 <span className="mt-1 whitespace-nowrap leading-none">{item.label}</span>
               </Link>
             );
