@@ -4,16 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { ProtectedPage } from "@/components/auth/protected-page";
+import { PillBottomNav, type PillNavItem } from "@/components/layout/pill-bottom-nav";
 
 const adminLinks = [
-  { href: "/admin/dashboard", label: "Dashboard", short: "Home" },
-  { href: "/admin/creators", label: "Creator verwalten", short: "Creator" },
-  { href: "/admin/companies", label: "Unternehmen verwalten", short: "Companies" },
-  { href: "/admin/campaigns", label: "Kampagnen prüfen", short: "Campaigns" },
-  { href: "/admin/deals", label: "Deals & Angebote", short: "Deals" },
-  { href: "/admin/disputes", label: "Streitfaelle", short: "Disputes" },
-  { href: "/admin/settings", label: "Settings", short: "Settings" },
-];
+  { href: "/admin/dashboard", icon: "menu", label: "Dashboard", short: "Home" },
+  { href: "/admin/creators", icon: "user", label: "Creator Verwaltung", short: "Creator" },
+  { href: "/admin/companies", icon: "briefcase", label: "Unternehmen", short: "Unternehmen" },
+  { href: "/admin/campaigns", icon: "ticket", label: "Kampagnen", short: "Kampagnen" },
+  { href: "/admin/deals", icon: "wallet", label: "Deals", short: "Deals" },
+  { href: "/admin/disputes", icon: "chat", label: "Streitfälle", short: "Streitfälle" },
+  { href: "/admin/settings", icon: "bars", label: "Settings", short: "Settings" },
+] satisfies Array<PillNavItem & { short: string }>;
 
 export function AdminShell({
   title,
@@ -28,7 +29,7 @@ export function AdminShell({
 
   return (
     <ProtectedPage role="admin">
-      <main className="premium-shell min-h-screen">
+      <main className="premium-shell min-h-screen pb-32">
         <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
           <header className="sticky top-3 z-20 rounded-lg border border-zinc-200 bg-white/94 px-3 py-3 shadow-sm backdrop-blur-xl">
             <div className="flex flex-col gap-4">
@@ -56,7 +57,9 @@ export function AdminShell({
                 </p>
                 <nav className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
                   {adminLinks.map((link) => {
-                    const active = pathname === link.href;
+                    const active =
+                      pathname === link.href ||
+                      (link.href !== "/admin/dashboard" && pathname.startsWith(link.href));
 
                     return (
                       <Link
@@ -103,6 +106,7 @@ export function AdminShell({
           </section>
         </div>
       </main>
+      <PillBottomNav items={adminLinks} />
     </ProtectedPage>
   );
 }

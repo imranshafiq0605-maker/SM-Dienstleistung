@@ -3,25 +3,12 @@
 import Link from "next/link";
 import { ReactNode } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { PillBottomNav, type PillNavItem } from "@/components/layout/pill-bottom-nav";
 
 const roleLabels = {
   admin: "Admin",
   creator: "Creator",
   company: "Unternehmen",
-};
-
-const shortLabels: Record<string, string> = {
-  "Anfrage senden": "Anfrage",
-  Bewerbungen: "Bewerb.",
-  "Creator suchen": "Creator",
-  Dashboard: "Home",
-  Deals: "Deals",
-  "Kampagne erstellen": "Kampagne",
-  Kampagnen: "Kampagn.",
-  "Media Kit": "Kit",
-  Profil: "Profil",
-  Socials: "Socials",
-  "Unternehmen suchen": "Firmen",
 };
 
 const statusStyles = {
@@ -49,32 +36,31 @@ export function DashboardShell({
   title: string;
 }) {
   const { appUser, signOut } = useAuth();
-  const navItems =
+  const navItems: PillNavItem[] =
     appUser?.role === "creator"
       ? [
-          ["/creator/dashboard", "Dashboard"],
-          ["/creator/profile", "Profil"],
-          ["/creator/socials", "Socials"],
-          ["/creator/media-kit", "Media Kit"],
-          ["/creator/company-search", "Unternehmen suchen"],
-          ["/creator/campaigns", "Kampagnen"],
-          ["/creator/offers/new", "Anfrage senden"],
-          ["/creator/deals", "Deals"],
+          { href: "/creator/dashboard", icon: "menu", label: "Home" },
+          { href: "/creator/profile", icon: "user", label: "Profil" },
+          { href: "/creator/socials", icon: "network", label: "Socials" },
+          { href: "/creator/campaigns", icon: "ticket", label: "Kampagnen" },
+          { href: "/creator/deals", icon: "wallet", label: "Deals" },
+          { href: "/creator/company-search", icon: "briefcase", label: "Firmen" },
+          { href: "/creator/media-kit", icon: "bars", label: "Media Kit" },
         ]
       : appUser?.role === "company"
         ? [
-            ["/company/dashboard", "Dashboard"],
-            ["/company/profile", "Profil"],
-            ["/company/creator-search", "Creator suchen"],
-            ["/company/campaigns/new", "Kampagne erstellen"],
-            ["/company/applications", "Bewerbungen"],
-            ["/company/offers/new", "Angebot senden"],
-            ["/company/deals", "Deals"],
+            { href: "/company/dashboard", icon: "menu", label: "Home" },
+            { href: "/company/profile", icon: "briefcase", label: "Profil" },
+            { href: "/company/creator-search", icon: "user", label: "Creator" },
+            { href: "/company/campaigns/new", icon: "ticket", label: "Kampagne" },
+            { href: "/company/deals", icon: "wallet", label: "Deals" },
+            { href: "/company/applications", icon: "bars", label: "Bewerbungen" },
+            { href: "/company/offers/new", icon: "chat", label: "Angebote" },
           ]
         : [];
 
   return (
-    <main className="premium-shell pb-28 text-zinc-950 md:pb-0">
+    <main className="premium-shell pb-32 text-zinc-950">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
         <header className="liquid-glass rounded-lg p-5 sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
@@ -123,8 +109,8 @@ export function DashboardShell({
             <span className="rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-black text-white">
               Menü
             </span>
-            {navItems.map(([href, label]) => (
-              <NavLink href={href} key={href} label={label} />
+            {navItems.map((item) => (
+              <NavLink href={item.href} key={item.href} label={item.label} />
             ))}
           </nav>
         ) : null}
@@ -132,19 +118,7 @@ export function DashboardShell({
         <div className="contents">{children}</div>
       </div>
 
-      {navItems.length ? (
-        <nav className="liquid-glass fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 gap-1 rounded-lg p-2 md:hidden">
-          {navItems.slice(0, 5).map(([href, label]) => (
-            <Link
-              className="rounded-lg px-2 py-3 text-center text-[11px] font-black text-zinc-800"
-              href={href}
-              key={href}
-            >
-              {shortLabels[label] || label}
-            </Link>
-          ))}
-        </nav>
-      ) : null}
+      {navItems.length ? <PillBottomNav items={navItems} /> : null}
     </main>
   );
 }
