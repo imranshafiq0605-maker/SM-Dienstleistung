@@ -1,374 +1,301 @@
 "use client";
 
+import { collection, getDocs } from "firebase/firestore";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { AdminShell } from "@/components/admin/admin-shell";
 import {
-  addDoc,
-  collection,
-  doc,
-  getDocs,
-  query,
-  serverTimestamp,
-  updateDoc,
-  where,
-} from "firebase/firestore";
-import { useCallback, useEffect, useState } from "react";
-import { ProtectedPage } from "@/components/auth/protected-page";
-import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
+  AdminSection,
+  AdminStatCard,
+  AdminTable,
+  EmptyState,
+  StatusBadge,
+} from "@/components/admin/admin-ui";
 import { db } from "@/lib/firebase";
 import type {
-  AdminNote,
   AppUser,
-  BlacklistEntry,
   Campaign,
-  CreatorProfile,
   CompanyProfile,
+  CreatorProfile,
   Deal,
-  PendingUser,
-  UserRole,
-  UserStatus,
+  Dispute,
 } from "@/types/creatorflow";
 
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("de-DE", {
+    currency: "EUR",
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(value);
+}
+
 export default function AdminDashboardPage() {
-  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
+  const [users, setUsers] = useState<AppUser[]>([]);
   const [creators, setCreators] = useState<CreatorProfile[]>([]);
   const [companies, setCompanies] = useState<CompanyProfile[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [blacklist, setBlacklist] = useState<BlacklistEntry[]>([]);
-  const [notes, setNotes] = useState<AdminNote[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-  const [updatingUid, setUpdatingUid] = useState<string | null>(null);
-  const [blacklistForm, setBlacklistForm] = useState({
-    targetId: "",
-    targetType: "creator" as UserRole | "campaign" | "deal",
-    reason: "",
-  });
-  const [noteForm, setNoteForm] = useState({
-    targetId: "",
-    targetType: "creator" as UserRole | "campaign" | "deal",
-    note: "",
-  });
-
-  const loadPendingUsers = useCallback(async () => {
-    const usersQuery = query(
-      collection(db, "users"),
-      where("status", "==", "pending"),
-    );
-    const snapshot = await getDocs(usersQuery);
-    const users = snapshot.docs.map((userDoc) => {
-      const user = userDoc.data() as AppUser;
-
-      return {
-        ...user,
-        profileLabel:
-          user.role === "company" ? "Unternehmen pruefen" : "Creator pruefen",
-      };
-    });
-
-    setPendingUsers(users);
-    setLoadingUsers(false);
-  }, []);
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    const usersQuery = query(
-      collection(db, "users"),
-      where("status", "==", "pending"),
+
+    Promise.all([
+      getDocs(collection(db, "users")),
+      getDocs(collection(db, "creatorProfiles")),
+      getDocs(collection(db, "companyProfiles")),
+      getDocs(collection(db, "campaigns")),
+      getDocs(collection(db, "deals")),
+      getDocs(collection(db, "disputes")),
+    ]).then(
+      ([
+        usersSnapshot,
+        creatorsSnapshot,
+        companiesSnapshot,
+        campaignsSnapshot,
+        dealsSnapshot,
+        disputesSnapshot,
+      ]) => {
+        if (!mounted) return;
+
+        setUsers(
+          usersSnapshot.docs.map((item) => ({
+            ...(item.data() as AppUser),
+            uid: item.id,
+          })),
+        );
+        setCreators(
+          creatorsSnapshot.docs.map((item) => ({
+            ...(item.data() as CreatorProfile),
+            uid: item.id,
+          })),
+        );
+        setCompanies(
+          companiesSnapshot.docs.map((item) => ({
+            ...(item.data() as CompanyProfile),
+            uid: item.id,
+          })),
+        );
+        setCampaigns(
+          campaignsSnapshot.docs.map((item) => ({
+            ...(item.data() as Campaign),
+            id: item.id,
+          })),
+        );
+        setDeals(
+          dealsSnapshot.docs.map((item) => ({
+            ...(item.data() as Deal),
+            id: item.id,
+          })),
+        );
+        setDisputes(
+          disputesSnapshot.docs.map((item) => ({
+            ...(item.data() as Dispute),
+            id: item.id,
+          })),
+        );
+        setLoading(false);
+      },
     );
-
-    getDocs(usersQuery).then((snapshot) => {
-      if (!mounted) return;
-
-      const users = snapshot.docs.map((userDoc) => {
-        const user = userDoc.data() as AppUser;
-
-        return {
-          ...user,
-          profileLabel:
-            user.role === "company" ? "Unternehmen pruefen" : "Creator pruefen",
-        };
-      });
-
-      setPendingUsers(users);
-      setLoadingUsers(false);
-    });
 
     return () => {
       mounted = false;
     };
   }, []);
 
-  useEffect(() => {
-    async function loadAdminData() {
-      const [
-        creatorsSnapshot,
-        companiesSnapshot,
-        campaignsSnapshot,
-        dealsSnapshot,
-        blacklistSnapshot,
-        notesSnapshot,
-      ] = await Promise.all([
-        getDocs(collection(db, "creatorProfiles")),
-        getDocs(collection(db, "companyProfiles")),
-        getDocs(collection(db, "campaigns")),
-        getDocs(collection(db, "deals")),
-        getDocs(collection(db, "blacklist")),
-        getDocs(collection(db, "adminNotes")),
-      ]);
+  const metrics = useMemo(() => {
+    const pendingUsers = users.filter((user) => user.status === "pending").length;
+    const activeCampaigns = campaigns.filter(
+      (campaign) => campaign.status === "active",
+    ).length;
+    const openDeals = deals.filter(
+      (deal) => !["completed", "paid_out"].includes(deal.status),
+    ).length;
+    const openDisputes =
+      disputes.filter((dispute) => dispute.status !== "resolved").length +
+      deals.filter((deal) => deal.status === "dispute").length;
+    const estimatedRevenue = deals.reduce(
+      (sum, deal) => sum + Number(deal.price || 0) * 0.15,
+      0,
+    );
 
-      setCreators(creatorsSnapshot.docs.map((item) => item.data() as CreatorProfile));
-      setCompanies(companiesSnapshot.docs.map((item) => item.data() as CompanyProfile));
-      setCampaigns(campaignsSnapshot.docs.map((item) => ({ ...(item.data() as Campaign), id: item.id })));
-      setDeals(dealsSnapshot.docs.map((item) => ({ ...(item.data() as Deal), id: item.id })));
-      setBlacklist(blacklistSnapshot.docs.map((item) => ({ ...(item.data() as BlacklistEntry), id: item.id })));
-      setNotes(notesSnapshot.docs.map((item) => ({ ...(item.data() as AdminNote), id: item.id })));
-    }
+    return {
+      activeCampaigns,
+      estimatedRevenue,
+      openDeals,
+      openDisputes,
+      pendingUsers,
+    };
+  }, [campaigns, deals, disputes, users]);
 
-    void loadAdminData();
-  }, []);
-
-  async function updateUserStatus(uid: string, role: string, status: UserStatus) {
-    setUpdatingUid(uid);
-
-    await updateDoc(doc(db, "users", uid), {
-      status,
-      reviewedAt: serverTimestamp(),
-    });
-
-    if (role === "creator") {
-      await updateDoc(doc(db, "creatorProfiles", uid), { status });
-    }
-
-    if (role === "company") {
-      await updateDoc(doc(db, "companyProfiles", uid), { status });
-    }
-
-    await loadPendingUsers();
-    setUpdatingUid(null);
-  }
-
-  async function updateProfileStatus(
-    uid: string,
-    role: Extract<UserRole, "creator" | "company">,
-    status: UserStatus,
-  ) {
-    await updateDoc(doc(db, "users", uid), { status, updatedAt: serverTimestamp() });
-    await updateDoc(doc(db, role === "creator" ? "creatorProfiles" : "companyProfiles", uid), {
-      status,
-      updatedAt: serverTimestamp(),
-    });
-  }
-
-  async function updateCampaignStatus(campaignId: string, status: Campaign["status"]) {
-    await updateDoc(doc(db, "campaigns", campaignId), {
-      status,
-      updatedAt: serverTimestamp(),
-    });
-  }
-
-  async function addBlacklistEntry() {
-    await addDoc(collection(db, "blacklist"), {
-      ...blacklistForm,
-      createdAt: serverTimestamp(),
-    });
-    setBlacklistForm({ targetId: "", targetType: "creator", reason: "" });
-  }
-
-  async function addAdminNote() {
-    await addDoc(collection(db, "adminNotes"), {
-      ...noteForm,
-      createdAt: serverTimestamp(),
-    });
-    setNoteForm({ targetId: "", targetType: "creator", note: "" });
-  }
+  const pendingProfiles = [
+    ...creators
+      .filter((creator) => creator.status === "pending")
+      .map((creator) => ({
+        id: creator.uid,
+        label: creator.artistName || `${creator.firstName} ${creator.lastName}`,
+        meta: creator.email,
+        role: "Creator",
+        href: "/admin/creators",
+      })),
+    ...companies
+      .filter((company) => company.status === "pending")
+      .map((company) => ({
+        id: company.uid,
+        label: company.companyName,
+        meta: company.email,
+        role: "Unternehmen",
+        href: "/admin/companies",
+      })),
+  ];
 
   return (
-    <ProtectedPage role="admin">
-      <DashboardShell title="Admin Dashboard">
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ["Creator", creators.length],
-            ["Unternehmen", companies.length],
-            ["Kampagnen", campaigns.length],
-            ["Deals", deals.length],
-            ["Streitfaelle", deals.filter((deal) => deal.status === "dispute").length],
-            ["Blacklist", blacklist.length],
-            ["Notizen", notes.length],
-            ["Offene Freigaben", pendingUsers.length],
-          ].map(([label, value]) => (
-            <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm" key={label}>
-              <p className="text-sm font-medium text-zinc-500">{label}</p>
-              <p className="mt-2 text-3xl font-semibold">{value}</p>
-            </div>
-          ))}
-        </section>
+    <AdminShell
+      subtitle="Kontrolliere Freigaben, Kampagnen, Deals, Streitfaelle und Plattformgesundheit an einem Ort."
+      title="Admin Dashboard"
+    >
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminStatCard
+          detail={loading ? "Wird geladen" : `${creators.length} Creatorprofile`}
+          label="Gesamtanzahl Nutzer"
+          value={users.length}
+        />
+        <AdminStatCard
+          detail={`${creators.filter((creator) => creator.status === "active").length} aktiv freigegeben`}
+          label="Creator"
+          value={creators.length}
+        />
+        <AdminStatCard
+          detail={`${companies.filter((company) => company.status === "active").length} aktiv freigegeben`}
+          label="Unternehmen"
+          value={companies.length}
+        />
+        <AdminStatCard
+          detail="Bei 15% Plattformfee geschätzt"
+          label="Plattformumsatz"
+          value={formatCurrency(metrics.estimatedRevenue)}
+        />
+      </section>
 
-        <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-                Freigaben
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold">
-                Pending Nutzer
-              </h2>
-            </div>
-            <button
-              className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold"
-              onClick={() => void loadPendingUsers()}
-              type="button"
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <AdminStatCard
+          detail="Nutzer mit Status pending"
+          label="Pending Nutzer"
+          value={metrics.pendingUsers}
+        />
+        <AdminStatCard
+          detail="Kampagnen mit Status active"
+          label="Aktive Kampagnen"
+          value={metrics.activeCampaigns}
+        />
+        <AdminStatCard
+          detail="Noch nicht abgeschlossen"
+          label="Offene Deals"
+          value={metrics.openDeals}
+        />
+        <AdminStatCard
+          detail="Disputes und Deal-Flags"
+          label="Offene Streitfaelle"
+          value={metrics.openDisputes}
+        />
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <AdminSection
+          action={
+            <Link
+              className="premium-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
+              href="/admin/creators"
             >
-              Aktualisieren
-            </button>
-          </div>
+              Alle pruefen
+            </Link>
+          }
+          eyebrow="Freigaben"
+          title="Pending Nutzer"
+        >
+          {pendingProfiles.length === 0 ? (
+            <EmptyState
+              text="Sobald sich neue Creator oder Unternehmen registrieren, erscheinen sie hier zur Freigabe."
+              title="Keine offenen Freigaben"
+            />
+          ) : (
+            <AdminTable columns={["Name", "Rolle", "Status", "Aktion"]}>
+              {pendingProfiles.slice(0, 6).map((profile) => (
+                <div
+                  className="grid gap-3 px-4 py-4 md:grid-cols-4 md:items-center"
+                  key={profile.id}
+                >
+                  <div>
+                    <p className="font-semibold text-zinc-950">{profile.label}</p>
+                    <p className="mt-1 text-sm text-zinc-500">{profile.meta}</p>
+                  </div>
+                  <p className="text-sm font-medium text-zinc-600">{profile.role}</p>
+                  <StatusBadge status="pending" />
+                  <Link
+                    className="premium-button w-fit rounded-lg px-3 py-2 text-sm font-semibold"
+                    href={profile.href}
+                  >
+                    Oeffnen
+                  </Link>
+                </div>
+              ))}
+            </AdminTable>
+          )}
+        </AdminSection>
 
-          <div className="mt-6 grid gap-3">
-            {loadingUsers ? (
-              <p className="text-sm text-zinc-500">Lade Nutzer...</p>
-            ) : null}
-
-            {!loadingUsers && pendingUsers.length === 0 ? (
-              <p className="text-sm text-zinc-500">
-                Keine offenen Freigaben vorhanden.
-              </p>
-            ) : null}
-
-            {pendingUsers.map((user) => (
-              <article
-                className="grid gap-4 rounded-lg border border-zinc-200 p-4 sm:grid-cols-[1fr_auto] sm:items-center"
-                key={user.uid}
+        <AdminSection eyebrow="Live Operation" title="Managementbereiche">
+          <div className="grid gap-3">
+            {[
+              ["Creator verwalten", "/admin/creators"],
+              ["Unternehmen verwalten", "/admin/companies"],
+              ["Kampagnen pruefen", "/admin/campaigns"],
+              ["Deals & Angebote", "/admin/deals"],
+              ["Streitfaelle", "/admin/disputes"],
+              ["Blacklist & Kategorien", "/admin/settings"],
+            ].map(([label, href]) => (
+              <Link
+                className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white/76 px-4 py-3 text-sm font-semibold text-zinc-800 hover:border-zinc-300 hover:bg-white"
+                href={href}
+                key={href}
               >
-                <div>
-                  <p className="font-semibold">{user.displayName}</p>
-                  <p className="mt-1 text-sm text-zinc-500">
-                    {user.email} · {user.role} · {user.profileLabel}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    className="rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white disabled:bg-zinc-400"
-                    disabled={updatingUid === user.uid}
-                    onClick={() =>
-                      void updateUserStatus(user.uid, user.role, "active")
-                    }
-                    type="button"
-                  >
-                    Freigeben
-                  </button>
-                  <button
-                    className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 disabled:text-zinc-400"
-                    disabled={updatingUid === user.uid}
-                    onClick={() =>
-                      void updateUserStatus(user.uid, user.role, "rejected")
-                    }
-                    type="button"
-                  >
-                    Ablehnen
-                  </button>
-                </div>
-              </article>
+                {label}
+                <span className="text-zinc-400">/</span>
+              </Link>
             ))}
           </div>
-        </section>
+        </AdminSection>
+      </div>
 
-        <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold">Creator bearbeiten</h2>
-          {creators.slice(0, 8).map((creator) => (
-            <article className="grid gap-3 rounded-lg border border-zinc-200 p-4 sm:grid-cols-[1fr_auto] sm:items-center" key={creator.uid}>
-              <div>
-                <p className="font-semibold">{creator.artistName || `${creator.firstName} ${creator.lastName}`}</p>
-                <p className="text-sm text-zinc-500">{creator.email} · {creator.status}</p>
+      <AdminSection eyebrow="Ueberwachung" title="Aktuelle Deals">
+        {deals.length === 0 ? (
+          <EmptyState
+            text="Wenn ein Angebot oder eine Bewerbung zu einem Deal wird, erscheint die Kooperation in dieser Uebersicht."
+            title="Noch keine Deals vorhanden"
+          />
+        ) : (
+          <AdminTable columns={["Deal", "Creator", "Unternehmen", "Status"]}>
+            {deals.slice(0, 8).map((deal) => (
+              <div
+                className="grid gap-3 px-4 py-4 md:grid-cols-4 md:items-center"
+                key={deal.id}
+              >
+                <div>
+                  <p className="font-semibold text-zinc-950">
+                    {deal.service || deal.campaignTitle || "Kooperation"}
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-500">
+                    {formatCurrency(Number(deal.price || 0))}
+                  </p>
+                </div>
+                <p className="text-sm text-zinc-600">{deal.creatorName || "-"}</p>
+                <p className="text-sm text-zinc-600">{deal.companyName || "-"}</p>
+                <StatusBadge status={deal.status} />
               </div>
-              <div className="flex gap-2">
-                <button className="rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white" onClick={() => void updateProfileStatus(creator.uid, "creator", "active")} type="button">Aktiv</button>
-                <button className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold" onClick={() => void updateProfileStatus(creator.uid, "creator", "rejected")} type="button">Sperren</button>
-              </div>
-            </article>
-          ))}
-        </section>
-
-        <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold">Unternehmen bearbeiten</h2>
-          {companies.slice(0, 8).map((company) => (
-            <article className="grid gap-3 rounded-lg border border-zinc-200 p-4 sm:grid-cols-[1fr_auto] sm:items-center" key={company.uid}>
-              <div>
-                <p className="font-semibold">{company.companyName}</p>
-                <p className="text-sm text-zinc-500">{company.email} · {company.status}</p>
-              </div>
-              <div className="flex gap-2">
-                <button className="rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white" onClick={() => void updateProfileStatus(company.uid, "company", "active")} type="button">Aktiv</button>
-                <button className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold" onClick={() => void updateProfileStatus(company.uid, "company", "rejected")} type="button">Sperren</button>
-              </div>
-            </article>
-          ))}
-        </section>
-
-        <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold">Kampagnen pruefen</h2>
-          {campaigns.slice(0, 8).map((campaign) => (
-            <article className="grid gap-3 rounded-lg border border-zinc-200 p-4 sm:grid-cols-[1fr_auto] sm:items-center" key={campaign.id}>
-              <div>
-                <p className="font-semibold">{campaign.title}</p>
-                <p className="text-sm text-zinc-500">{campaign.companyName} · {campaign.status}</p>
-              </div>
-              <div className="flex gap-2">
-                <button className="rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white" onClick={() => void updateCampaignStatus(campaign.id, "active")} type="button">Aktiv</button>
-                <button className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold" onClick={() => void updateCampaignStatus(campaign.id, "closed")} type="button">Schliessen</button>
-              </div>
-            </article>
-          ))}
-        </section>
-
-        <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold">Deals ueberwachen</h2>
-          {deals.slice(0, 10).map((deal) => (
-            <article className="rounded-lg border border-zinc-200 p-4" key={deal.id}>
-              <p className="font-semibold">{deal.service || deal.campaignTitle || deal.id}</p>
-              <p className="text-sm text-zinc-500">{deal.creatorName} · {deal.companyName} · {deal.status}</p>
-            </article>
-          ))}
-        </section>
-
-        <section className="grid gap-4 rounded-lg border border-red-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold">Streitfaelle</h2>
-          {deals.filter((deal) => deal.status === "dispute").map((deal) => (
-            <article className="rounded-lg border border-red-200 bg-red-50 p-4" key={deal.id}>
-              <p className="font-semibold">{deal.service || deal.id}</p>
-              <p className="text-sm text-red-700">{deal.creatorName} · {deal.companyName}</p>
-            </article>
-          ))}
-        </section>
-
-        <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold">Blacklist verwalten</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <TextField label="Ziel-ID" value={blacklistForm.targetId} onChange={(event) => setBlacklistForm((current) => ({ ...current, targetId: event.target.value }))} />
-            <SelectField label="Typ" value={blacklistForm.targetType} onChange={(event) => setBlacklistForm((current) => ({ ...current, targetType: event.target.value as typeof blacklistForm.targetType }))}>
-              <option value="creator">Creator</option>
-              <option value="company">Unternehmen</option>
-              <option value="campaign">Kampagne</option>
-              <option value="deal">Deal</option>
-            </SelectField>
-            <TextField label="Grund" value={blacklistForm.reason} onChange={(event) => setBlacklistForm((current) => ({ ...current, reason: event.target.value }))} />
-          </div>
-          <button className="w-fit rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white" onClick={() => void addBlacklistEntry()} type="button">Zur Blacklist hinzufuegen</button>
-        </section>
-
-        <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold">Interne Notizen</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <TextField label="Ziel-ID" value={noteForm.targetId} onChange={(event) => setNoteForm((current) => ({ ...current, targetId: event.target.value }))} />
-            <SelectField label="Typ" value={noteForm.targetType} onChange={(event) => setNoteForm((current) => ({ ...current, targetType: event.target.value as typeof noteForm.targetType }))}>
-              <option value="creator">Creator</option>
-              <option value="company">Unternehmen</option>
-              <option value="campaign">Kampagne</option>
-              <option value="deal">Deal</option>
-            </SelectField>
-          </div>
-          <TextAreaField label="Notiz" value={noteForm.note} onChange={(event) => setNoteForm((current) => ({ ...current, note: event.target.value }))} />
-          <button className="w-fit rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white" onClick={() => void addAdminNote()} type="button">Notiz speichern</button>
-        </section>
-      </DashboardShell>
-    </ProtectedPage>
+            ))}
+          </AdminTable>
+        )}
+      </AdminSection>
+    </AdminShell>
   );
 }

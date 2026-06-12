@@ -326,3 +326,24 @@ export interface AdminNote {
   note: string;
   createdAt: FirestoreDate;
 }
+
+export interface Dispute {
+  id: string;
+  dealId: string;
+  title: string;
+  reason: string;
+  status: "open" | "in_review" | "resolved" | "rejected";
+  creatorId?: string;
+  creatorName?: string;
+  companyId?: string;
+  companyName?: string;
+  createdAt: FirestoreDate;
+  updatedAt?: FirestoreDate;
+}
+
+export interface PlatformCategory {
+  id: string;
+  name: string;
+  active: boolean;
+  createdAt: FirestoreDate;
+}
