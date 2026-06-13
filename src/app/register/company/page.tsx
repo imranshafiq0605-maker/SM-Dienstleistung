@@ -6,7 +6,7 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { FileUploadField, TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { auth, db, storage } from "@/lib/firebase";
 
 export default function CompanyRegisterPage() {
@@ -22,6 +22,10 @@ export default function CompanyRegisterPage() {
     city: "",
     country: "",
     description: "",
+    legalForm: "",
+    taxNumber: "",
+    vatId: "",
+    vatExempt: "no",
   });
   const [logo, setLogo] = useState<File | null>(null);
   const [error, setError] = useState("");
@@ -76,10 +80,13 @@ export default function CompanyRegisterPage() {
         industry: form.industry,
         address: "",
         billingAddress: "",
-        vatId: "",
         city: form.city,
         country: form.country,
         description: form.description,
+        legalForm: form.legalForm,
+        taxNumber: form.taxNumber,
+        vatId: form.vatId,
+        vatExempt: form.vatExempt === "yes",
         logoUrl,
         socialLinks: [],
         activeCampaigns: 0,
@@ -120,6 +127,13 @@ export default function CompanyRegisterPage() {
           <TextField label="Telefonnummer" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} />
           <TextField label="Website" value={form.website} onChange={(e) => updateField("website", e.target.value)} />
           <TextField label="Branche" value={form.industry} onChange={(e) => updateField("industry", e.target.value)} />
+          <TextField label="Rechtsform" value={form.legalForm} onChange={(e) => updateField("legalForm", e.target.value)} />
+          <TextField label="Steuernummer" value={form.taxNumber} onChange={(e) => updateField("taxNumber", e.target.value)} />
+          <TextField label="USt-ID" value={form.vatId} onChange={(e) => updateField("vatId", e.target.value)} />
+          <SelectField label="Umsatzsteuer befreit" value={form.vatExempt} onChange={(e) => updateField("vatExempt", e.target.value)}>
+            <option value="no">Nein</option>
+            <option value="yes">Ja</option>
+          </SelectField>
           <TextField label="Stadt" value={form.city} onChange={(e) => updateField("city", e.target.value)} />
           <TextField label="Land" value={form.country} onChange={(e) => updateField("country", e.target.value)} />
         </div>

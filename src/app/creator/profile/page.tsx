@@ -32,6 +32,11 @@ const initialForm = {
   priceYouTubeShort: "",
   priceYouTubeVideo: "",
   priceUgcVideo: "",
+  legalForm: "",
+  taxNumber: "",
+  vatId: "",
+  vatExempt: "no",
+  invoiceAddress: "",
 };
 
 function toMoney(value: string) {
@@ -75,6 +80,11 @@ export default function CreatorProfilePage() {
         priceYouTubeShort: String(profile.priceYouTubeShort ?? ""),
         priceYouTubeVideo: String(profile.priceYouTubeVideo ?? ""),
         priceUgcVideo: String(profile.priceUgcVideo ?? ""),
+        legalForm: profile.legalForm ?? "",
+        taxNumber: profile.taxNumber ?? "",
+        vatId: profile.vatId ?? "",
+        vatExempt: profile.vatExempt ? "yes" : "no",
+        invoiceAddress: profile.invoiceAddress ?? "",
       });
       setCategories(profile.categories ?? []);
       setCurrentImageUrl(profile.profileImageUrl ?? null);
@@ -123,6 +133,11 @@ export default function CreatorProfilePage() {
       priceYouTubeShort: toMoney(form.priceYouTubeShort),
       priceYouTubeVideo: toMoney(form.priceYouTubeVideo),
       priceUgcVideo: toMoney(form.priceUgcVideo),
+      legalForm: form.legalForm,
+      taxNumber: form.taxNumber,
+      vatId: form.vatId,
+      vatExempt: form.vatExempt === "yes",
+      invoiceAddress: form.invoiceAddress,
       updatedAt: serverTimestamp(),
     });
 
@@ -165,6 +180,19 @@ export default function CreatorProfilePage() {
           <TextAreaField label="Bio" value={form.bio} onChange={(e) => updateField("bio", e.target.value)} />
           <TextAreaField label="Zielgruppe" value={form.audience} onChange={(e) => updateField("audience", e.target.value)} />
           <TextField label="Verfügbarkeit" value={form.availability} onChange={(e) => updateField("availability", e.target.value)} />
+          <section className="grid gap-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+            <h2 className="text-lg font-semibold">Steuer- und Rechnungsdaten</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextField label="Rechtsform" placeholder="Keine, Einzelunternehmen, UG..." value={form.legalForm} onChange={(e) => updateField("legalForm", e.target.value)} />
+              <TextField label="Steuernummer" value={form.taxNumber} onChange={(e) => updateField("taxNumber", e.target.value)} />
+              <TextField label="USt-ID" value={form.vatId} onChange={(e) => updateField("vatId", e.target.value)} />
+              <SelectField label="Umsatzsteuer befreit" value={form.vatExempt} onChange={(e) => updateField("vatExempt", e.target.value)}>
+                <option value="no">Nein</option>
+                <option value="yes">Ja</option>
+              </SelectField>
+            </div>
+            <TextAreaField label="Rechnungsadresse" value={form.invoiceAddress} onChange={(e) => updateField("invoiceAddress", e.target.value)} />
+          </section>
 
           <fieldset className="grid gap-3">
             <legend className="text-sm font-medium text-zinc-700">Kategorien</legend>

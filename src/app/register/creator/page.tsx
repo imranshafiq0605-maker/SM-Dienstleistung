@@ -6,7 +6,7 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { FileUploadField, TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { auth, db, storage } from "@/lib/firebase";
 import { creatorCategories } from "@/lib/profile-options";
 
@@ -22,6 +22,10 @@ export default function CreatorRegisterPage() {
     city: "",
     country: "",
     shortBio: "",
+    legalForm: "",
+    taxNumber: "",
+    vatId: "",
+    vatExempt: "no",
   });
   const [categories, setCategories] = useState<string[]>([]);
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -104,6 +108,10 @@ export default function CreatorRegisterPage() {
         rating: 0,
         verified: false,
         ugcAvailable: false,
+        legalForm: form.legalForm,
+        taxNumber: form.taxNumber,
+        vatId: form.vatId,
+        vatExempt: form.vatExempt === "yes",
         profileImageUrl,
         mediaKit: [],
         screenshots: [],
@@ -144,6 +152,13 @@ export default function CreatorRegisterPage() {
           <TextField label="Passwort" required minLength={6} type="password" value={form.password} onChange={(e) => updateField("password", e.target.value)} />
           <TextField label="Stadt" value={form.city} onChange={(e) => updateField("city", e.target.value)} />
           <TextField label="Land" value={form.country} onChange={(e) => updateField("country", e.target.value)} />
+          <TextField label="Rechtsform" placeholder="Keine, Einzelunternehmen, UG..." value={form.legalForm} onChange={(e) => updateField("legalForm", e.target.value)} />
+          <TextField label="Steuernummer" value={form.taxNumber} onChange={(e) => updateField("taxNumber", e.target.value)} />
+          <TextField label="USt-ID" value={form.vatId} onChange={(e) => updateField("vatId", e.target.value)} />
+          <SelectField label="Umsatzsteuer befreit" value={form.vatExempt} onChange={(e) => updateField("vatExempt", e.target.value)}>
+            <option value="no">Nein</option>
+            <option value="yes">Ja</option>
+          </SelectField>
         </div>
 
         <TextAreaField

@@ -137,7 +137,7 @@ export default function CreatorSocialsPage() {
                 </p>
                 {account.profileUrl ? (
                   <a className="mt-2 inline-block text-sm font-medium text-zinc-700 underline" href={account.profileUrl} rel="noreferrer" target="_blank">
-                    Profil oeffnen
+                    Profil öffnen
                   </a>
                 ) : null}
               </div>

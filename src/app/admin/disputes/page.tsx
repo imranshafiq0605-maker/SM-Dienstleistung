@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
 import { collection, getDocs } from "firebase/firestore";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import {
@@ -54,7 +55,7 @@ export default function AdminDisputesPage() {
     >
       <section className="grid gap-4 md:grid-cols-4">
         <AdminStatCard
-          detail="Manuell erfasste Faelle"
+          detail="Manuell erfasste Fälle"
           label="Disputes"
           value={disputes.length}
         />
@@ -64,13 +65,13 @@ export default function AdminDisputesPage() {
           value={dealDisputes.length}
         />
         <AdminStatCard
-          detail="Noch nicht geloest"
+          detail="Noch nicht gelöst"
           label="Offen"
           value={disputes.filter((dispute) => dispute.status !== "resolved").length}
         />
         <AdminStatCard
           detail="Abgeschlossen"
-          label="Geloest"
+          label="Gelöst"
           value={disputes.filter((dispute) => dispute.status === "resolved").length}
         />
       </section>
@@ -96,7 +97,12 @@ export default function AdminDisputesPage() {
                 </div>
                 <p className="text-sm text-zinc-600">{dispute.creatorName || "-"}</p>
                 <p className="text-sm text-zinc-600">{dispute.companyName || "-"}</p>
-                <StatusBadge status={dispute.status} />
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge status={dispute.status} />
+                  <Link className="rounded-lg border border-zinc-200 px-3 py-2 text-sm font-semibold" href={`/admin/disputes/${dispute.id}`}>
+                    Öffnen
+                  </Link>
+                </div>
               </div>
             ))}
             {dealDisputes.map((deal) => (
@@ -121,3 +127,4 @@ export default function AdminDisputesPage() {
     </AdminShell>
   );
 }
+

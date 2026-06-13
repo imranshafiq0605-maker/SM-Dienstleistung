@@ -274,6 +274,8 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
       return;
     }
 
+    const price = Number(offer.price || 0);
+    const platformFee = price * 0.15;
     const dealRef = await addDoc(collection(db, "deals"), {
       campaignId: offer.campaignId || "",
       campaignTitle: offer.campaignTitle || "",
@@ -285,11 +287,19 @@ export function ChatRoom({ conversationId }: { conversationId: string }) {
       deadline: offer.deadline,
       format: offer.format,
       platform: offer.platform,
-      price: offer.price,
+      price,
+      platformFee,
+      platformFeeRate: 0.15,
+      creatorPayout: price - platformFee,
+      payoutStatus: "not_ready",
+      companyInvoiceStatus: "open",
+      creatorInvoiceStatus: "missing",
+      productPackage: offer.productShipping,
+      productShipping: offer.productShipping,
       service: offer.service,
       sourceId: offer.id,
       sourceType: "offer",
-      status: "contract_open" satisfies Deal["status"],
+      status: "payment_open" satisfies Deal["status"],
       updatedAt: serverTimestamp(),
     });
 

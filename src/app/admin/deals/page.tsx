@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { collection, doc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
@@ -12,25 +12,6 @@ import {
 } from "@/components/admin/admin-ui";
 import { db } from "@/lib/firebase";
 import type { Deal, DealStatus, Offer } from "@/types/creatorflow";
-
-const dealStatuses: DealStatus[] = [
-  "contract_open",
-  "payment_open",
-  "payment_received",
-  "shipping_open",
-  "product_shipped",
-  "product_arrived",
-  "content_in_progress",
-  "content_uploaded",
-  "feedback_open",
-  "revision",
-  "approved",
-  "published",
-  "completed",
-  "payout_open",
-  "paid_out",
-  "dispute",
-];
 
 export default function AdminDealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -73,6 +54,26 @@ export default function AdminDealsPage() {
     });
     setDeals((current) =>
       current.map((deal) => (deal.id === id ? { ...deal, status } : deal)),
+    );
+    setUpdatingId(null);
+  }
+
+  async function markPaymentReceived(deal: Deal) {
+    await updateDealStatus(deal.id, deal.productShipping ? "shipping_open" : "payment_received");
+  }
+
+  async function markPaidOut(deal: Deal) {
+    setUpdatingId(deal.id);
+    await updateDoc(doc(db, "deals", deal.id), {
+      paidOutAt: serverTimestamp(),
+      payoutStatus: "paid_out",
+      status: "paid_out",
+      updatedAt: serverTimestamp(),
+    });
+    setDeals((current) =>
+      current.map((item) =>
+        item.id === deal.id ? { ...item, payoutStatus: "paid_out", status: "paid_out" } : item,
+      ),
     );
     setUpdatingId(null);
   }
@@ -134,20 +135,31 @@ export default function AdminDealsPage() {
                 <p className="text-sm text-zinc-600">{deal.creatorName || "-"}</p>
                 <p className="text-sm text-zinc-600">{deal.companyName || "-"}</p>
                 <StatusBadge status={deal.status} />
-                <select
-                  className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium disabled:opacity-50"
-                  disabled={updatingId === deal.id}
-                  onChange={(event) =>
-                    void updateDealStatus(deal.id, event.target.value as DealStatus)
-                  }
-                  value={deal.status}
-                >
-                  {dealStatuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status.replaceAll("_", " ")}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-wrap gap-2">
+                  {deal.status === "payment_open" ? (
+                    <button
+                      className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 disabled:opacity-50"
+                      disabled={updatingId === deal.id}
+                      onClick={() => void markPaymentReceived(deal)}
+                      type="button"
+                    >
+                      Zahlung eingegangen
+                    </button>
+                  ) : null}
+                  {deal.status === "completed" || deal.payoutStatus === "payout_open" ? (
+                    <button
+                      className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold disabled:opacity-50"
+                      disabled={updatingId === deal.id}
+                      onClick={() => void markPaidOut(deal)}
+                      type="button"
+                    >
+                      Auszahlung erledigt
+                    </button>
+                  ) : null}
+                  {deal.status !== "payment_open" && deal.status !== "completed" && deal.payoutStatus !== "payout_open" ? (
+                    <span className="text-sm font-medium text-zinc-500">Keine Aktion</span>
+                  ) : null}
+                </div>
               </div>
             ))}
           </AdminTable>
@@ -184,3 +196,4 @@ export default function AdminDealsPage() {
     </AdminShell>
   );
 }
+

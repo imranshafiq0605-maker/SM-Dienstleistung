@@ -21,7 +21,7 @@ import type { CampaignApplication } from "@/types/creatorflow";
 const statusLabels: Record<CampaignApplication["status"], string> = {
   applied: "beworben",
   seen: "gesehen",
-  in_review: "in Pruefung",
+  in_review: "in Prüfung",
   accepted: "angenommen",
   rejected: "abgelehnt",
   counter_offer: "Gegenangebot",
@@ -110,6 +110,8 @@ export default function CompanyApplicationsPage() {
   }
 
   async function createDeal(application: CampaignApplication) {
+    const price = Number(application.counterOfferPrice || application.desiredFee || 0);
+    const platformFee = price * 0.15;
     const dealRef = await addDoc(collection(db, "deals"), {
       sourceType: "application",
       sourceId: application.id,
@@ -119,12 +121,20 @@ export default function CompanyApplicationsPage() {
       creatorName: application.creatorName,
       companyId: application.companyId,
       companyName: application.companyName,
-      price: application.counterOfferPrice || application.desiredFee,
+      price,
+      platformFee,
+      platformFeeRate: 0.15,
+      creatorPayout: price - platformFee,
+      payoutStatus: "not_ready",
+      companyInvoiceStatus: "open",
+      creatorInvoiceStatus: "missing",
+      productPackage: false,
+      productShipping: false,
       service: application.campaignTitle,
       platform: "",
       format: "",
       deadline: application.publishDate,
-      status: "contract_open",
+      status: "payment_open",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
@@ -194,7 +204,7 @@ export default function CompanyApplicationsPage() {
                 <button className="rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white" onClick={() => void updateApplication(application, "accepted")} type="button">Annehmen</button>
                 <button className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold" onClick={() => void updateApplication(application, "rejected")} type="button">Ablehnen</button>
                 <button className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold" onClick={() => setActiveApplicationId(activeApplicationId === application.id ? null : application.id)} type="button">Gegenangebot</button>
-                <button className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold" onClick={() => void updateApplication(application, "in_review")} type="button">In Pruefung</button>
+                <button className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold" onClick={() => void updateApplication(application, "in_review")} type="button">In Prüfung</button>
                 <button className="rounded-full bg-zinc-800 px-4 py-2 text-sm font-semibold text-white" onClick={() => void createDeal(application)} type="button">Deal erstellen</button>
               </div>
 

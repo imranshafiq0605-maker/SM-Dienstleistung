@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   addDoc,
@@ -7,15 +7,16 @@ import {
   onSnapshot,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
 } from "firebase/firestore";
 import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
-import { FileUploadField, SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import { uploadProfileFiles } from "@/lib/storage-upload";
-import type { ContentSubmission, Deal, DealStatus, FirestoreDate, UserRole } from "@/types/creatorflow";
+import type { ContentSubmission, Deal, FirestoreDate, UserRole } from "@/types/creatorflow";
 
 function timeValue(value: FirestoreDate) {
   if (!value) return 0;
@@ -31,24 +32,25 @@ function isVideo(fileName: string) {
   return /\.(mov|mp4|mpeg|mpg|webm)$/i.test(fileName);
 }
 
-const dealStatusOptions: { value: DealStatus; label: string }[] = [
-  { value: "contract_open", label: "Vertrag offen" },
-  { value: "payment_open", label: "Zahlung offen" },
-  { value: "payment_received", label: "Zahlung eingegangen" },
-  { value: "shipping_open", label: "Produktversand offen" },
-  { value: "product_shipped", label: "Produkt versendet" },
-  { value: "product_arrived", label: "Produkt angekommen" },
-  { value: "content_in_progress", label: "Content in Arbeit" },
-  { value: "content_uploaded", label: "Content hochgeladen" },
-  { value: "feedback_open", label: "Feedback offen" },
-  { value: "revision", label: "Überarbeitung" },
-  { value: "approved", label: "Freigegeben" },
-  { value: "published", label: "Veröffentlicht" },
-  { value: "completed", label: "Abgeschlossen" },
-  { value: "payout_open", label: "Auszahlung offen" },
-  { value: "paid_out", label: "Ausgezahlt" },
-  { value: "dispute", label: "Streitfall" },
-];
+const dealStatusLabels: Record<Deal["status"], string> = {
+  contract_open: "Vertrag offen",
+  payment_open: "Zahlung offen",
+  payment_received: "Zahlung eingegangen",
+  shipping_open: "Produktversand offen",
+  product_shipped: "Produkt versendet",
+  product_arrived: "Produkt angekommen",
+  content_in_progress: "Content in Arbeit",
+  content_uploaded: "Content hochgeladen",
+  feedback_open: "Feedback offen",
+  revision: "Überarbeitung",
+  approved: "Freigegeben",
+  published: "Veröffentlicht",
+  completed: "Abgeschlossen",
+  payout_open: "Auszahlung offen",
+  paid_out: "Ausgezahlt",
+  dispute: "Streitfall",
+};
+
 
 const initialReview = {
   first: "5",
@@ -65,6 +67,9 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
   const [contentForm, setContentForm] = useState({ caption: "", postLink: "" });
   const [contentFiles, setContentFiles] = useState<FileList | null>(null);
   const [feedback, setFeedback] = useState("");
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [shippingCarrier, setShippingCarrier] = useState("");
+  const [disputeReason, setDisputeReason] = useState("");
   const [review, setReview] = useState(initialReview);
   const [notice, setNotice] = useState("");
   const [uploadingContent, setUploadingContent] = useState(false);
@@ -155,6 +160,11 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
   }
 
   async function updateSubmission(submission: ContentSubmission, status: ContentSubmission["status"]) {
+    if (status === "revision_requested" && !feedback.trim()) {
+      setContentError("Bitte beschreibe genau, was überarbeitet werden soll.");
+      return;
+    }
+
     await updateDoc(doc(db, "contentSubmissions", submission.id), {
       status,
       feedback,
@@ -165,13 +175,68 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
       updatedAt: serverTimestamp(),
     });
     setFeedback("");
+    setContentError("");
   }
 
-  async function updateDealStatus(status: DealStatus) {
+  async function markProductShipped(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!deal || !trackingNumber.trim()) {
+      setContentError("Bitte gib eine Trackingnummer ein.");
+      return;
+    }
+
     await updateDoc(doc(db, "deals", dealId), {
-      status,
+      status: "product_shipped",
+      trackingNumber,
+      shippingCarrier,
       updatedAt: serverTimestamp(),
     });
+    setNotice("Trackingnummer wurde gespeichert.");
+    setContentError("");
+  }
+
+  async function confirmPublished() {
+    if (!deal) return;
+
+    await updateDoc(doc(db, "deals", dealId), {
+      status: "completed",
+      payoutStatus: "payout_open",
+      completedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    setNotice("Kooperation abgeschlossen. Auszahlung ist offen.");
+  }
+
+  async function openDispute(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!deal || !appUser || !disputeReason.trim()) {
+      setContentError("Bitte nenne den Grund für den Streitfall.");
+      return;
+    }
+
+    const disputeRef = doc(collection(db, "disputes"));
+    await setDoc(disputeRef, {
+      companyId: deal.companyId,
+      companyName: deal.companyName,
+      createdAt: serverTimestamp(),
+      creatorId: deal.creatorId,
+      creatorName: deal.creatorName,
+      dealId,
+      openedBy: appUser.uid,
+      reason: disputeReason,
+      status: "open",
+      title: deal.service || deal.campaignTitle || "Streitfall",
+      updatedAt: serverTimestamp(),
+    });
+    await updateDoc(doc(db, "deals", dealId), {
+      disputeId: disputeRef.id,
+      disputeReason,
+      status: "dispute",
+      updatedAt: serverTimestamp(),
+    });
+    setDisputeReason("");
+    setNotice("Streitfall wurde eröffnet.");
+    setContentError("");
   }
 
   async function submitReview(event: FormEvent<HTMLFormElement>) {
@@ -236,6 +301,11 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
     );
   }
 
+  const canUploadContent =
+    role === "creator" &&
+    deal.status !== "payment_open" &&
+    (!deal.productShipping || deal.status === "product_shipped" || deal.status === "revision" || deal.status === "content_uploaded" || deal.status === "approved");
+
   return (
     <div className="grid gap-6">
       <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
@@ -245,18 +315,107 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
             <h2 className="mt-2 text-2xl font-semibold">{deal.service || deal.campaignTitle}</h2>
             <p className="mt-1 text-sm text-zinc-500">{deal.creatorName} und {deal.companyName}</p>
           </div>
-          <SelectField label="Deal Status" value={deal.status} onChange={(event) => void updateDealStatus(event.target.value as DealStatus)}>
-            {dealStatusOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </SelectField>
+          <span className="w-fit rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white">
+            {dealStatusLabels[deal.status] || deal.status}
+          </span>
         </div>
+        <div className="grid gap-3 rounded-lg bg-zinc-50 p-4 text-sm sm:grid-cols-4">
+          <div>
+            <p className="text-zinc-500">Unternehmen zahlt</p>
+            <p className="font-semibold">{Number(deal.price || 0).toLocaleString("de-DE")} EUR</p>
+          </div>
+          <div>
+            <p className="text-zinc-500">CreatorFlow Fee 15%</p>
+            <p className="font-semibold">{Number(deal.platformFee ?? Number(deal.price || 0) * 0.15).toLocaleString("de-DE")} EUR</p>
+          </div>
+          <div>
+            <p className="text-zinc-500">Creator Auszahlung</p>
+            <p className="font-semibold">{Number(deal.creatorPayout ?? Number(deal.price || 0) * 0.85).toLocaleString("de-DE")} EUR</p>
+          </div>
+          <div>
+            <p className="text-zinc-500">Auszahlung</p>
+            <p className="font-semibold">{deal.payoutStatus === "paid_out" ? "Ausgezahlt" : deal.payoutStatus === "payout_open" ? "Offen" : "Noch nicht bereit"}</p>
+          </div>
+        </div>
+        {deal.status === "payment_open" ? (
+          <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+            Das Unternehmen muss die Zahlung zuerst an CreatorFlow senden. Danach startet der nächste Schritt automatisch.
+          </p>
+        ) : null}
+        {deal.productShipping && deal.trackingNumber ? (
+          <p className="rounded-lg border border-cyan-200 bg-cyan-50 p-4 text-sm font-semibold text-cyan-800">
+            Trackingnummer: {deal.shippingCarrier ? `${deal.shippingCarrier} · ` : ""}{deal.trackingNumber}
+          </p>
+        ) : null}
         {notice ? <p className="text-sm font-medium text-green-700">{notice}</p> : null}
       </section>
 
       <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+        <h2 className="text-2xl font-semibold">Rechnungen & Auszahlung</h2>
+        <div className="grid gap-3 text-sm md:grid-cols-2">
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+            <p className="font-semibold text-zinc-950">Unternehmensrechnung</p>
+            <p className="mt-2 text-zinc-600">
+              CreatorFlow stellt dem Unternehmen die Leistung in Rechnung.
+            </p>
+            <p className="mt-2 font-semibold">{Number(deal.price || 0).toLocaleString("de-DE")} EUR</p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+            <p className="font-semibold text-zinc-950">Creator-Rechnung</p>
+            <p className="mt-2 text-zinc-600">
+              Der Creator stellt CreatorFlow eine Rechnung. Auszahlung: Betrag abzüglich 15% Plattformfee.
+            </p>
+            <p className="mt-2 font-semibold">{Number(deal.creatorPayout ?? Number(deal.price || 0) * 0.85).toLocaleString("de-DE")} EUR</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+        <h2 className="text-2xl font-semibold">Streitfall</h2>
+        {deal.status === "dispute" ? (
+          <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+            Für diesen Deal wurde bereits ein Streitfall eröffnet.
+          </p>
+        ) : (
+          <form className="grid gap-3" onSubmit={(event) => void openDispute(event)}>
+            <TextAreaField
+              label="Grund für den Streitfall"
+              placeholder="Beschreibe konkret, was passiert ist."
+              value={disputeReason}
+              onChange={(event) => setDisputeReason(event.target.value)}
+            />
+            <button className="w-fit rounded-full border border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700" type="submit">
+              Streitfall eröffnen
+            </button>
+          </form>
+        )}
+      </section>
+
+      <section className="grid gap-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
         <h2 className="text-2xl font-semibold">Content Workflow</h2>
-        {role === "creator" ? (
+        {deal.productShipping && role === "company" && ["payment_received", "shipping_open"].includes(deal.status) ? (
+          <form className="grid gap-4 rounded-lg border border-cyan-200 bg-cyan-50 p-4" onSubmit={(event) => void markProductShipped(event)}>
+            <div>
+              <h3 className="font-semibold text-cyan-950">PR-Paket versenden</h3>
+              <p className="mt-1 text-sm text-cyan-800">
+                Der Creator sieht die Trackingnummer direkt im Deal.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <TextField label="Versanddienstleister" value={shippingCarrier} onChange={(event) => setShippingCarrier(event.target.value)} />
+              <TextField label="Trackingnummer" value={trackingNumber} onChange={(event) => setTrackingNumber(event.target.value)} />
+            </div>
+            <button className="w-fit rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white" type="submit">
+              Trackingnummer speichern
+            </button>
+          </form>
+        ) : null}
+        {role === "creator" && !canUploadContent ? (
+          <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+            Content kann erst hochgeladen werden, wenn die Zahlung eingegangen ist{deal.productShipping ? " und das PR-Paket versendet wurde" : ""}.
+          </p>
+        ) : null}
+        {canUploadContent ? (
           <form className="grid gap-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4" onSubmit={(event) => void submitContent(event)}>
             <TextAreaField label="Caption" value={contentForm.caption} onChange={(event) => setContentForm((current) => ({ ...current, caption: event.target.value }))} />
             <TextField label="Post-Link" value={contentForm.postLink} onChange={(event) => setContentForm((current) => ({ ...current, postLink: event.target.value }))} />
@@ -313,6 +472,11 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
                   </div>
                 </div>
               ) : null}
+              {role === "creator" && submission.status === "approved" && deal.status !== "completed" ? (
+                <button className="w-fit rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white" onClick={() => void confirmPublished()} type="button">
+                  Veröffentlichung bestätigen und abschließen
+                </button>
+              ) : null}
             </article>
           ))}
         </div>
@@ -334,3 +498,5 @@ export function DealWorkspace({ dealId, role }: { dealId: string; role: Extract<
     </div>
   );
 }
+
+

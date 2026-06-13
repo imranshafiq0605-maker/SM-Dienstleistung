@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { ProtectedPage } from "@/components/auth/protected-page";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { FileUploadField, TextAreaField, TextField } from "@/components/ui/form-field";
+import { FileUploadField, SelectField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { db } from "@/lib/firebase";
 import { uploadProfileFile } from "@/lib/storage-upload";
 import type { CompanyProfile } from "@/types/creatorflow";
@@ -20,6 +20,9 @@ const initialForm = {
   address: "",
   billingAddress: "",
   vatId: "",
+  legalForm: "",
+  taxNumber: "",
+  vatExempt: "no",
   country: "",
   city: "",
   socialLinks: "",
@@ -50,6 +53,9 @@ export default function CompanyProfilePage() {
         address: profile.address ?? "",
         billingAddress: profile.billingAddress ?? "",
         vatId: profile.vatId ?? "",
+        legalForm: profile.legalForm ?? "",
+        taxNumber: profile.taxNumber ?? "",
+        vatExempt: profile.vatExempt ? "yes" : "no",
         country: profile.country ?? "",
         city: profile.city ?? "",
         socialLinks: (profile.socialLinks ?? []).join("\n"),
@@ -94,6 +100,9 @@ export default function CompanyProfilePage() {
       address: form.address,
       billingAddress: form.billingAddress,
       vatId: form.vatId,
+      legalForm: form.legalForm,
+      taxNumber: form.taxNumber,
+      vatExempt: form.vatExempt === "yes",
       country: form.country,
       city: form.city,
       socialLinks,
@@ -126,6 +135,12 @@ export default function CompanyProfilePage() {
             <TextField label="Website" value={form.website} onChange={(e) => updateField("website", e.target.value)} />
             <TextField label="Branche" value={form.industry} onChange={(e) => updateField("industry", e.target.value)} />
             <TextField label="USt-ID" value={form.vatId} onChange={(e) => updateField("vatId", e.target.value)} />
+            <TextField label="Rechtsform" placeholder="z. B. GmbH, UG, Einzelunternehmen" value={form.legalForm} onChange={(e) => updateField("legalForm", e.target.value)} />
+            <TextField label="Steuernummer" value={form.taxNumber} onChange={(e) => updateField("taxNumber", e.target.value)} />
+            <SelectField label="Umsatzsteuer befreit" value={form.vatExempt} onChange={(e) => updateField("vatExempt", e.target.value)}>
+              <option value="no">Nein</option>
+              <option value="yes">Ja</option>
+            </SelectField>
             <TextField label="Land" value={form.country} onChange={(e) => updateField("country", e.target.value)} />
             <TextField label="Stadt" value={form.city} onChange={(e) => updateField("city", e.target.value)} />
           </div>

@@ -108,6 +108,11 @@ export interface CreatorProfile {
   screenshots: UploadedAsset[];
   portfolio: UploadedAsset[];
   socialAccounts: SocialAccount[];
+  legalForm?: string;
+  taxNumber?: string;
+  vatId?: string;
+  vatExempt?: boolean;
+  invoiceAddress?: string;
   status: UserStatus;
   createdAt: FirestoreDate;
 }
@@ -132,6 +137,9 @@ export interface CompanyProfile {
   budgetMin?: number;
   budgetMax?: number;
   verified?: boolean;
+  legalForm?: string;
+  taxNumber?: string;
+  vatExempt?: boolean;
   status: UserStatus;
   createdAt: FirestoreDate;
 }
@@ -256,6 +264,18 @@ export interface Deal {
   format: string;
   deadline: string;
   status: DealStatus;
+  productShipping?: boolean;
+  productPackage?: boolean;
+  trackingNumber?: string;
+  shippingCarrier?: string;
+  platformFeeRate?: number;
+  platformFee?: number;
+  creatorPayout?: number;
+  payoutStatus?: "not_ready" | "payout_open" | "paid_out";
+  companyInvoiceStatus?: "open" | "issued";
+  creatorInvoiceStatus?: "missing" | "received";
+  completedAt?: FirestoreDate;
+  paidOutAt?: FirestoreDate;
   createdAt: FirestoreDate;
   updatedAt?: FirestoreDate;
 }
